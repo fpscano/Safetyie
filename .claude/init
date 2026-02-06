@@ -1,1 +1,93 @@
-# This is an initialization file for Gemini CLI.
+# Safetyie Project - Claude Code Init File
+
+## Project Overview
+Safetyie is a safety management platform built with Cloudflare Pages and D1 database.
+The platform manages clients, users, fleet data, and audit logging.
+
+## Repository Information
+- **Parent Repo:** https://github.com/fpscano/Safetyie
+- **Cano Submodule:** https://github.com/fpscano/S.I.E.git
+- **Project Structure:** The `cano` directory is a git submodule containing the main application
+
+## Deployment Information
+- **Latest Deployment:** https://d2c6062a.sie-ebe.pages.dev
+- **Production URL:** https://sie-ebe.pages.dev
+- **Custom Domain:** https://safetyie.com
+- **Cloudflare Project:** sie
+
+## Database
+- **D1 Database:** sie-db
+- **Database ID:** b3fe982e-d3d7-4cf9-8c6c-274ee5e4682a
+- **Type:** SQLite via Cloudflare D1
+
+## Default Credentials
+**Client Login:**
+- Company Code: SIE
+- Email: admin@sie.com
+- Password: admin123
+
+## Common Commands
+
+### Deploy to Cloudflare Pages
+```bash
+cd cano
+npx wrangler pages deploy --project-name=sie
+```
+
+### Check D1 Database
+```bash
+cd cano
+npx wrangler d1 execute sie-db --remote --command "SELECT * FROM clients;"
+```
+
+### View Deployment History
+```bash
+cd cano
+npx wrangler pages deployment list --project-name=sie
+```
+
+### Git Workflow (Cano Submodule)
+```bash
+cd cano
+git add .
+git commit -m "Your commit message"
+git push
+cd ..
+git add cano
+git commit -m "Update cano submodule"
+git push
+```
+
+## Recent Fixes Applied
+
+### 2026-02-06 - D1 Parameter Binding Fixes
+- Fixed incorrect D1 query syntax across all API endpoints
+- Changed from `.run(params)` to `.bind(params).run()`
+- Affected files: audit.js, login.js, and all admin endpoints
+
+### 2026-02-06 - Audit Log Foreign Key Fix
+- Fixed foreign key constraint error for client user logins
+- Changed audit logging to use NULL for user_id on client actions
+
+### 2026-02-06 - Admin Authentication Fix
+- Fixed critical D1 API issue in getAuthUser() function
+- Changed from `.get()` to `.bind().first()` method
+- Added database availability checks to all admin endpoints
+- Made audit logging non-blocking to prevent operation failures
+
+## Architecture Notes
+- **Frontend:** Static HTML/CSS/JS served from `/website` directory
+- **Backend:** Cloudflare Pages Functions in `/cano/functions` directory
+- **Database:** Cloudflare D1 (SQLite) with migrations in `/cano/migrations`
+- **Authentication:** JWT tokens with role-based access control
+- **Users:** Separate tables for platform users (`users`) and client users (`client_users`)
+
+## Key Files
+- `cano/wrangler.toml` - Cloudflare configuration
+- `cano/functions/_shared/auth.js` - Authentication utilities
+- `cano/functions/_shared/audit.js` - Audit logging
+- `cano/functions/api/v1/auth/login.js` - Client login endpoint
+- `cano/migrations/` - Database schema migrations
+
+## Support
+For issues or questions, contact: FPSCano@gmail.com

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us | SIE - Safety Intelligence Engine</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <img src="images/SIE Logo.png" alt="SIE - Safety Intelligence Engine" class="logo-img">
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About Us</a></li>
+                <li><a href="contact.html" class="active">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Contact Hero -->
+    <section class="contact-hero">
+        <div class="container">
+            <h1>Let's Talk Safety</h1>
+            <p class="hero-subtitle">Interested in early access? Have questions? We'd love to hear from you.</p>
+        </div>
+    </section>
+
+    <!-- Contact Content -->
+    <section class="contact-section">
+        <div class="container">
+            <div class="contact-grid">
+                <!-- Contact Info -->
+                <div class="contact-info">
+                    <h2>Get In Touch</h2>
+
+                    <div class="contact-method">
+                        <div class="contact-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                <polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                        </div>
+                        <div class="contact-details">
+                            <h4>Email</h4>
+                            <a href="mailto:CCano@safetyie.com">CCano@safetyie.com</a>
+                            <p>For inquiries, early access requests, and partnership opportunities.</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-note">
+                        <h3>What to Include</h3>
+                        <p>When reaching out, it helps to know:</p>
+                        <ul>
+                            <li>Your role (Safety Director, Fleet Manager, etc.)</li>
+                            <li>Fleet size (number of vehicles/drivers)</li>
+                            <li>Current telematics/ELD providers you use</li>
+                            <li>What challenges you're facing</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Interest Form -->
+                <div class="contact-form-wrapper">
+                    <div class="form-card">
+                        <h2>Request Early Access</h2>
+                        <p>Join our early access program to help shape SIE and be first in line at launch.</p>
+
+                        <form class="contact-form" action="mailto:CCano@safetyie.com" method="post" enctype="text/plain">
+                            <div class="form-group">
+                                <label for="name">Name</label>
+                                <input type="text" id="name" name="name" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="company">Company</label>
+                                <input type="text" id="company" name="company">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="role">Your Role</label>
+                                <select id="role" name="role">
+                                    <option value="">Select...</option>
+                                    <option value="safety-director">Safety Director</option>
+                                    <option value="fleet-manager">Fleet Manager</option>
+                                    <option value="operations">Operations</option>
+                                    <option value="compliance">Compliance</option>
+                                    <option value="owner">Owner/Executive</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="fleet-size">Fleet Size</label>
+                                <select id="fleet-size" name="fleet-size">
+                                    <option value="">Select...</option>
+                                    <option value="1-25">1-25 vehicles</option>
+                                    <option value="26-100">26-100 vehicles</option>
+                                    <option value="101-500">101-500 vehicles</option>
+                                    <option value="500+">500+ vehicles</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="message">Tell us about your safety challenges</label>
+                                <textarea id="message" name="message" rows="4" placeholder="What problems are you trying to solve?"></textarea>
+                            </div>
+
+                            <button type="submit" class="submit-button">Request Access</button>
+                        </form>
+
+                        <p class="form-note">Or email us directly at <a href="mailto:CCano@safetyie.com">CCano@safetyie.com</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="container">
+            <h2>Frequently Asked Questions</h2>
+
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <h4>When will SIE be available?</h4>
+                    <p>We're currently in active development with early access testing underway. Join our early access program to be notified when we launch.</p>
+                </div>
+
+                <div class="faq-item">
+                    <h4>What telematics systems do you integrate with?</h4>
+                    <p>We're building integrations with major providers including Samsara, Lytx, and common ELD platforms. Let us know what you use and we'll prioritize accordingly.</p>
+                </div>
+
+                <div class="faq-item">
+                    <h4>How much will SIE cost?</h4>
+                    <p>Pricing is still being finalized. Our goal is to make SIE accessible to fleets of all sizes. Early access participants will receive preferred pricing.</p>
+                </div>
+
+                <div class="faq-item">
+                    <h4>Is my data secure?</h4>
+                    <p>Data security is paramount. We're implementing industry-standard encryption and compliance measures. Your fleet data remains your property.</p>
+                </div>
+
+                <div class="faq-item">
+                    <h4>Can I try SIE with my own data?</h4>
+                    <p>Early access participants will be able to test SIE with their actual fleet data to evaluate its effectiveness before committing.</p>
+                </div>
+
+                <div class="faq-item">
+                    <h4>Who built SIE?</h4>
+                    <p>SIE was built by a safety professional who spent years frustrated by the gap between having data and knowing what to do with it. <a href="about.html">Read our story</a>.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="images/C.A.N.O Insudtries.png" alt="C.A.N.O Technologies" class="footer-logo-img">
+                    <p>Safety Intelligence Engine</p>
+                    <p class="footer-tagline">A C.A.N.O Technologies Product</p>
+                </div>
+                <div class="footer-nav-row">
+                    <div class="footer-links">
+                        <h4>Navigation</h4>
+                        <ul>
+                            <li><a href="index.html">Home</a></li>
+                            <li><a href="about.html">About Us</a></li>
+                            <li><a href="contact.html">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-contact">
+                        <h4>Get In Touch</h4>
+                        <p><a href="mailto:CCano@safetyie.com">CCano@safetyie.com</a></p>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 C.A.N.O Technologies. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,1 @@
+SELECT id, client_code, is_active, client_name FROM clients WHERE client_code = 'SIE';

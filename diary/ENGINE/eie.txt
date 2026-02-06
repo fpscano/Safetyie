@@ -1,0 +1,119 @@
+# Event Intelligence Engine (EIE)
+
+**ID:** `eie`
+**Name:** Event Intelligence
+**Description:** Safety event activity and trends
+
+## Purpose
+The EIE engine monitors and analyzes safety event activity and trends, providing insights into potential risks and driver behavior. It stores and retrieves `eie_scores` in the database.
+
+## Configuration Details
+
+The EIE engine's operational parameters are defined as follows:
+
+-   **Database Table:** `eie_scores`
+-   **Score Field:** `score` (a numerical value between 0 and 100 representing event severity or frequency)
+-   **Required POST Fields:** `vehicle_id`, `client_id`, `score`
+-   **Insertable Fields:**
+    -   `vehicle_id`
+    -   `driver_id`
+    -   `client_id`
+    -   `score`
+    -   `event_count_24h` (Number of events in the last 24 hours)
+    -   `high_severity_count` (Number of high-severity events)
+    -   `trend` (e.g., "improving", "worsening", "stable")
+    -   `computed_at` (Timestamp when the score was computed)
+-   **Filterable GET Fields:**
+    -   `client_id`
+    -   `vehicle_id`
+    -   `driver_id`
+
+## Operational Mechanics (Data Flow)
+
+The EIE engine processes data through GET and POST requests, similar to HIE.
+
+### GET Request Flow
+
+```
++----------------+       +-------------------+       +---------------------+
+| Client Request | ----> | Engine API (/eie) | ----> | Authentication/Auth |
+| (GET /eie)     |       | (handleGET)       |       | (getAuthUser)       |
++----------------+       +-------------------+       +---------------------+
+        |                          |                          | (Success: admin/dev)
+        |                          |                          v
+        |                          |               +-----------------------+
+        |                          |               | Validate client_id &  |
+        |                          |               | other filter fields   |
+        |                          |               +-----------------------+
+        |                          |                          |
+        |                          v                          v
+        |                  +----------------------------------------------+
+        |                  | Construct SQL Query (SELECT * FROM eie_scores)|
+        |                  | WHERE client_id = ? AND vehicle_id = ? ...   |
+        |                  | ORDER BY computed_at DESC LIMIT ?            |
+        |                  +----------------------------------------------+
+        |                                        |
+        |                                        v
+        |                           +-----------------------+
+        |<------------------------- | Database (Cloudflare D1)|
+        |    (jsonResponse)         | (env.DB.prepare.all)  |
+        +---------------------------+-----------------------+
+        (JSON Array of EIE scores)
+```
+
+### POST Request Flow
+
+```
++----------------+       +-------------------+       +---------------------+
+| Client Request | ----> | Engine API (/eie) | ----> | Authentication/Auth |
+| (POST /eie)    |       | (handlePOST)      |       | (getAuthUser)       |
++----------------+       +-------------------+       +---------------------+
+        |                          |                          | (Success: dev)
+        |                          |                          v
+        |                          |               +-----------------------+
+        |                          |               | Parse Request Body    |
+        |                          |               | (JSON)                |
+        |                          |               +-----------------------+
+        |                          |                          |
+        |                          v                          v
+        |               +--------------------------------------------------+
+        |               | Validate Required Fields (vehicle_id, client_id, score) |
+        |               | Validate Score (0-100)                             |
+        |               | Default computed_at if missing                     |
+        +---------------+--------------------------------------------------+
+                        |
+                        v
+               +-----------------------------------------------------+
+               | Construct SQL Insert Query (INSERT INTO eie_scores) |
+               +-----------------------------------------------------+
+                                   |
+                                   v
+                       +-----------------------+       +----------------+
+                       | Database (Cloudflare D1)| ----> | Audit Log      |
+                       | (env.DB.prepare.run)  |       | (logAudit)     |
+                       +-----------------------+       ----------------+
+                                   |
+                                   v
+               +--------------------------------------------------+
+               | Retrieve Inserted Row (SELECT * WHERE id = ?)    |
+               +--------------------------------------------------+
+                                   |
+                                   v
+        +----------------------------------------------------------+
+        |<------------------------- | Client Response (jsonResponse, status 201) |
+        +--------------------------+-------------------------------------------+
+        (JSON of newly inserted EIE score)
+```
+
+## Formulas and Logic
+
+The EIE engine's logic involves:
+
+-   **Score Validation:** The `score` field must be a number between 0 and 100.
+-   **Timestamping:** If `computed_at` is not provided in a POST request, it defaults to the current UTC timestamp.
+-   **Data Filtering:** GET requests allow filtering by `client_id`, `vehicle_id`, and `driver_id`.
+-   **Ordering and Limiting:** GET results are ordered by `computed_at` DESC and limited to a maximum of 500 records.
+-   **Authorization:**
+    -   GET requests require `admin` or `dev` roles.
+    -   POST requests require the `dev` role.
+-   **Audit Logging:** Every successful POST operation logs an audit event.

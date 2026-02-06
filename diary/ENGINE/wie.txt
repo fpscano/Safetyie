@@ -1,0 +1,116 @@
+# Weather Intelligence Engine (WIE)
+
+**ID:** `wie`
+**Name:** Weather Intelligence
+**Description:** Weather conditions at vehicle locations
+
+## Purpose
+The WIE engine integrates and analyzes weather conditions relevant to vehicle locations. It stores and retrieves `wie_scores` in the database, providing insights into environmental factors affecting operations.
+
+## Configuration Details
+
+The WIE engine's operational parameters are defined as follows:
+
+-   **Database Table:** `wie_scores`
+-   **Score Field:** `score` (a numerical value between 0 and 100, potentially representing weather impact or severity)
+-   **Required POST Fields:** `vehicle_id`, `client_id`, `score`
+-   **Insertable Fields:**
+    -   `vehicle_id`
+    -   `client_id`
+    -   `score`
+    -   `weather_condition` (e.g., "sunny", "rain", "snow")
+    -   `severity` (e.g., "low", "medium", "high")
+    -   `advisory` (e.g., "fog_warning", "ice_alert")
+    -   `computed_at` (Timestamp when the score was computed)
+-   **Filterable GET Fields:**
+    -   `client_id`
+    -   `vehicle_id`
+
+## Operational Mechanics (Data Flow)
+
+The WIE engine processes data through GET and POST requests, similar to other engines.
+
+### GET Request Flow
+
+```
++----------------+       +-------------------+       +---------------------+
+| Client Request | ----> | Engine API (/wie) | ----> | Authentication/Auth |
+| (GET /wie)     |       | (handleGET)       |       | (getAuthUser)       |
++----------------+       +-------------------+       +---------------------+
+        |                          |                          | (Success: admin/dev)
+        |                          |                          v
+        |                          |               +-----------------------+
+        |                          |               | Validate client_id &  |
+        |                          |               | other filter fields   |
+        |                          |               +-----------------------+
+        |                          |                          |
+        |                          v                          v
+        |                  +----------------------------------------------+
+        |                  | Construct SQL Query (SELECT * FROM wie_scores)|
+        |                  | WHERE client_id = ? AND vehicle_id = ? ...   |
+        |                  | ORDER BY computed_at DESC LIMIT ?            |
+        |                  +----------------------------------------------+
+        |                                        |
+        |                                        v
+        |                           +-----------------------+
+        |<------------------------- | Database (Cloudflare D1)|
+        |    (jsonResponse)         | (env.DB.prepare.all)  |
+        +---------------------------+-----------------------+
+        (JSON Array of WIE scores)
+```
+
+### POST Request Flow
+
+```
++----------------+       +-------------------+       +---------------------+
+| Client Request | ----> | Engine API (/wie) | ----> | Authentication/Auth |
+| (POST /wie)    |       | (handlePOST)      |       | (getAuthUser)       |
++----------------+       +-------------------+       +---------------------+
+        |                          |                          | (Success: dev)
+        |                          |               +-----------------------+
+        |                          |               | Parse Request Body    |
+        |                          |               | (JSON)                |
+        |                          |               +-----------------------+
+        |                          |                          |
+        |                          v                          v
+        |               +--------------------------------------------------+
+        |               | Validate Required Fields (vehicle_id, client_id, score) |
+        |               | Validate Score (0-100)                             |
+        |               | Default computed_at if missing                     |
+        +---------------+--------------------------------------------------+
+                        |
+                        v
+               +-----------------------------------------------------+
+               | Construct SQL Insert Query (INSERT INTO wie_scores) |
+               +-----------------------------------------------------+
+                                   |
+                                   v
+                       +-----------------------+       +----------------+
+                       | Database (Cloudflare D1)| ----> | Audit Log      |
+                       | (env.DB.prepare.run)  |       | (logAudit)     |
+                       +-----------------------+       ----------------+
+                                   |
+                                   v
+               +--------------------------------------------------+
+               | Retrieve Inserted Row (SELECT * WHERE id = ?)    |
+               +--------------------------------------------------+
+                                   |
+                                   v
+        +----------------------------------------------------------+
+        |<------------------------- | Client Response (jsonResponse, status 201) |
+        +--------------------------+-------------------------------------------+
+        (JSON of newly inserted WIE score)
+```
+
+## Formulas and Logic
+
+The WIE engine's logic involves:
+
+-   **Score Validation:** The `score` field must be a number between 0 and 100.
+-   **Timestamping:** If `computed_at` is not provided in a POST request, it defaults to the current UTC timestamp.
+-   **Data Filtering:** GET requests allow filtering by `client_id` and `vehicle_id`.
+-   **Ordering and Limiting:** GET results are ordered by `computed_at` DESC and limited to a maximum of 500 records.
+-   **Authorization:**
+    -   GET requests require `admin` or `dev` roles.
+    -   POST requests require the `dev` role.
+-   **Audit Logging:** Every successful POST operation logs an audit event.

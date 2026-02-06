@@ -1,0 +1,125 @@
+# Safety Intelligence Engine (SIE)
+
+**ID:** `sie`
+**Name:** Safety Intelligence
+**Description:** Master engine - final determination score
+
+## Purpose
+The SIE engine acts as a "master engine," consolidating and synthesizing scores from other intelligence engines to produce a final, comprehensive safety determination score. This score, along with a determination level, provides an overarching view of safety status. It stores and retrieves `sie_scores` in the database.
+
+## Configuration Details
+
+The SIE engine's operational parameters are defined as follows:
+
+-   **Database Table:** `sie_scores`
+-   **Score Field:** `determination_score` (a numerical value between 0 and 100, representing the overall safety score)
+-   **Required POST Fields:** `vehicle_id`, `client_id`, `determination_score`, `determination_level`
+-   **Insertable Fields:**
+    -   `vehicle_id`
+    -   `driver_id`
+    -   `client_id`
+    -   `determination_score`
+    -   `determination_level` (e.g., "safe", "monitor", "intervene", "out_of_service")
+    -   `hie_score` (Score from Hours of Service Intelligence Engine)
+    -   `eie_score` (Score from Event Intelligence Engine)
+    -   `fie_score` (Score from Fault Intelligence Engine)
+    -   `tie_score` (Score from Telematics Intelligence Engine)
+    -   `dvirie_score` (Score from Inspection Intelligence Engine)
+    -   `wie_score` (Score from Weather Intelligence Engine)
+    -   `pie_score` (Score from Prediction Intelligence Engine)
+    -   `computed_at` (Timestamp when the score was computed)
+-   **Filterable GET Fields:**
+    -   `client_id`
+    -   `vehicle_id`
+    -   `driver_id`
+
+## Operational Mechanics (Data Flow)
+
+The SIE engine processes data through GET and POST requests, similar to other engines.
+
+### GET Request Flow
+
+```
++----------------+       +-------------------+       +---------------------+
+| Client Request | ----> | Engine API (/sie) | ----> | Authentication/Auth |
+| (GET /sie)     |       | (handleGET)       |       | (getAuthUser)       |
++----------------+       +-------------------+       +---------------------+
+        |                          |                          | (Success: admin/dev)
+        |                          |                          v
+        |                          |               +-----------------------+
+        |                          |               | Validate client_id &  |
+        |                          |               | other filter fields   |
+        |                          |               +-----------------------+
+        |                          |                          |
+        |                          v                          v
+        |                  +----------------------------------------------+
+        |                  | Construct SQL Query (SELECT * FROM sie_scores)|
+        |                  | WHERE client_id = ? AND vehicle_id = ? ...   |
+        |                  | ORDER BY computed_at DESC LIMIT ?            |
+        |                  +----------------------------------------------+
+        |                                        |
+        |                                        v
+        |                           +-----------------------+
+        |<------------------------- | Database (Cloudflare D1)|
+        |    (jsonResponse)         | (env.DB.prepare.all)  |
+        +---------------------------+-----------------------+
+        (JSON Array of SIE scores)
+```
+
+### POST Request Flow
+
+```
++----------------+       +-------------------+       +---------------------+
+| Client Request | ----> | Engine API (/sie) | ----> | Authentication/Auth |
+| (POST /sie)    |       | (handlePOST)      |       | (getAuthUser)       |
++----------------+       +-------------------+       +---------------------+
+        |                          |                          | (Success: dev)
+        |                          |               +-----------------------+
+        |                          |               | Parse Request Body    |
+        |                          |               | (JSON)                |
+        |                          |               +-----------------------+
+        |                          |                          |
+        |                          v                          v
+        |               +--------------------------------------------------+
+        |               | Validate Required Fields (vehicle_id, client_id, determination_score, determination_level) |
+        |               | Validate determination_score (0-100)             |
+        |               | Validate determination_level (enum)              |
+        |               | Default computed_at if missing                   |
+        +---------------+--------------------------------------------------+
+                        |
+                        v
+               +-----------------------------------------------------+
+               | Construct SQL Insert Query (INSERT INTO sie_scores) |
+               +-----------------------------------------------------+
+                                   |
+                                   v
+                       +-----------------------+       +----------------+
+                       | Database (Cloudflare D1)| ----> | Audit Log      |
+                       | (env.DB.prepare.run)  |       | (logAudit)     |
+                       +-----------------------+       ----------------+
+                                   |
+                                   v
+               +--------------------------------------------------+
+               | Retrieve Inserted Row (SELECT * WHERE id = ?)    |
+               +--------------------------------------------------+
+                                   |
+                                   v
+        +----------------------------------------------------------+
+        |<------------------------- | Client Response (jsonResponse, status 201) |
+        +--------------------------+-------------------------------------------+
+        (JSON of newly inserted SIE score)
+```
+
+## Formulas and Logic
+
+The SIE engine's logic involves:
+
+-   **Score Validation:** The `determination_score` field must be a number between 0 and 100.
+-   **Determination Level Validation:** The `determination_level` must be one of "safe", "monitor", "intervene", or "out_of_service".
+-   **Timestamping:** If `computed_at` is not provided in a POST request, it defaults to the current UTC timestamp.
+-   **Data Filtering:** GET requests allow filtering by `client_id`, `vehicle_id`, and `driver_id`.
+-   **Ordering and Limiting:** GET results are ordered by `computed_at` DESC and limited to a maximum of 500 records.
+-   **Authorization:**
+    -   GET requests require `admin` or `dev` roles.
+    -   POST requests require the `dev` role.
+-   **Audit Logging:** Every successful POST operation logs an audit event.

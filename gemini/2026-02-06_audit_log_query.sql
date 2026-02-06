@@ -1,0 +1,1 @@
+SELECT * FROM audit_log ORDER BY timestamp DESC LIMIT 10;

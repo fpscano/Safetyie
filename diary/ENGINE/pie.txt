@@ -1,0 +1,121 @@
+# Prediction Intelligence Engine (PIE)
+
+**ID:** `pie`
+**Name:** Prediction Intelligence
+**Description:** AI-driven forward-looking risk predictions
+
+## Purpose
+The PIE engine generates AI-driven forward-looking risk predictions. It stores and retrieves `pie_scores` in the database, providing proactive insights into potential future events or risks.
+
+## Configuration Details
+
+The PIE engine's operational parameters are defined as follows:
+
+-   **Database Table:** `pie_scores`
+-   **Score Field:** `score` (a numerical value between 0 and 100, representing the predicted risk level or confidence)
+-   **Required POST Fields:** `vehicle_id`, `client_id`, `score`, `prediction_type`
+-   **Insertable Fields:**
+    -   `vehicle_id`
+    -   `driver_id`
+    -   `client_id`
+    -   `score`
+    -   `prediction_type` (e.g., "accident_risk", "maintenance_failure")
+    -   `confidence` (Confidence level of the prediction)
+    -   `risk_factors` (JSON string of factors contributing to the prediction)
+    -   `prediction_horizon_hours` (How far into the future the prediction applies)
+    -   `computed_at` (Timestamp when the score was computed)
+-   **Filterable GET Fields:**
+    -   `client_id`
+    -   `vehicle_id`
+    -   `driver_id`
+
+## Operational Mechanics (Data Flow)
+
+The PIE engine processes data through GET and POST requests, similar to other engines.
+
+### GET Request Flow
+
+```
++----------------+       +-------------------+       +---------------------+
+| Client Request | ----> | Engine API (/pie) | ----> | Authentication/Auth |
+| (GET /pie)     |       | (handleGET)       |       | (getAuthUser)       |
++----------------+       +-------------------+       +---------------------+
+        |                          |                          | (Success: admin/dev)
+        |                          |                          v
+        |                          |               +-----------------------+
+        |                          |               | Validate client_id &  |
+        |                          |               | other filter fields   |
+        |                          |               +-----------------------+
+        |                          |                          |
+        |                          v                          v
+        |                  +----------------------------------------------+
+        |                  | Construct SQL Query (SELECT * FROM pie_scores)|
+        |                  | WHERE client_id = ? AND vehicle_id = ? ...   |
+        |                  | ORDER BY computed_at DESC LIMIT ?            |
+        |                  +----------------------------------------------+
+        |                                        |
+        |                                        v
+        |                           +-----------------------+
+        |<------------------------- | Database (Cloudflare D1)|
+        |    (jsonResponse)         | (env.DB.prepare.all)  |
+        +---------------------------+-----------------------+
+        (JSON Array of PIE scores)
+```
+
+### POST Request Flow
+
+```
++----------------+       +-------------------+       +---------------------+
+| Client Request | ----> | Engine API (/pie) | ----> | Authentication/Auth |
+| (POST /pie)    |       | (handlePOST)      |       | (getAuthUser)       |
++----------------+       +-------------------+       +---------------------+
+        |                          |                          | (Success: dev)
+        |                          |               +-----------------------+
+        |                          |               | Parse Request Body    |
+        |                          |               | (JSON)                |
+        |                          |               +-----------------------+
+        |                          |                          |
+        |                          v                          v
+        |               +--------------------------------------------------+
+        |               | Validate Required Fields (vehicle_id, client_id, score, prediction_type) |
+        |               | Validate Score (0-100)                             |
+        |               | Default computed_at if missing                     |
+        |               | Handle risk_factors (JSON.stringify)             |
+        +---------------+--------------------------------------------------+
+                        |
+                        v
+               +-----------------------------------------------------+
+               | Construct SQL Insert Query (INSERT INTO pie_scores) |
+               +-----------------------------------------------------+
+                                   |
+                                   v
+                       +-----------------------+       +----------------+
+                       | Database (Cloudflare D1)| ----> | Audit Log      |
+                       | (env.DB.prepare.run)  |       | (logAudit)     |
+                       +-----------------------+       ----------------+
+                                   |
+                                   v
+               +--------------------------------------------------+
+               | Retrieve Inserted Row (SELECT * WHERE id = ?)    |
+               +--------------------------------------------------+
+                                   |
+                                   v
+        +----------------------------------------------------------+
+        |<------------------------- | Client Response (jsonResponse, status 201) |
+        +--------------------------+-------------------------------------------+
+        (JSON of newly inserted PIE score)
+```
+
+## Formulas and Logic
+
+The PIE engine's logic involves:
+
+-   **Score Validation:** The `score` field must be a number between 0 and 100.
+-   **Timestamping:** If `computed_at` is not provided in a POST request, it defaults to the current UTC timestamp.
+-   **`risk_factors` Handling:** If `risk_factors` is provided and is not already a string, it is converted to a JSON string using `JSON.stringify()` before insertion.
+-   **Data Filtering:** GET requests allow filtering by `client_id`, `vehicle_id`, and `driver_id`.
+-   **Ordering and Limiting:** GET results are ordered by `computed_at` DESC and limited to a maximum of 500 records.
+-   **Authorization:**
+    -   GET requests require `admin` or `dev` roles.
+    -   POST requests require the `dev` role.
+-   **Audit Logging:** Every successful POST operation logs an audit event.

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | SIE - Safety Intelligence Engine</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            display: flex;
+            background-color: var(--surface);
+        }
+        .sidebar {
+            width: 250px;
+            background-color: var(--background);
+            color: var(--text);
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-header {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .sidebar-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar-nav li {
+            margin-bottom: 10px;
+        }
+        .sidebar-nav a {
+            display: block;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background-color: var(--accent);
+            color: white;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 40px;
+            color: var(--text);
+        }
+        .main-content h1 {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">SIE Admin</div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li><a href="#" class="active">Dashboard</a></li>
+                <li><a href="admin-manage-users.html">Manage Users</a></li>
+                <!-- Add more admin links here -->
+            </ul>
+        </nav>
+        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border);">
+            <a href="#" id="logout-btn">Logout</a>
+        </div>
+    </div>
+    <div class="main-content">
+        <h1>Welcome to the Admin Dashboard!</h1>
+        <p>This is your central hub for managing your SIE client environment.</p>
+        <p>Use the sidebar to navigate through various administrative functions.</p>
+    </div>
+
+    <script>
+        document.getElementById('logout-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('sie_token');
+            localStorage.removeItem('sie_user');
+            window.location.href = '/client_login.html'; // Redirect to client login after logout
+        });
+
+        // Basic check for authentication
+        const token = localStorage.getItem('sie_token');
+        if (!token) {
+            window.location.href = '/client_login.html'; // Redirect if no token
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+# Hours of Service Intelligence Engine (HIE)
+
+**ID:** `hie`
+**Name:** Hours of Service Intelligence
+**Description:** HOS compliance and remaining drive time
+
+## Purpose
+The HIE engine is responsible for calculating and tracking Hours of Service (HOS) compliance and estimating remaining drive time for drivers. It stores and retrieves `hie_scores` in the database, providing insights into driver availability and compliance status.
+
+## Configuration Details
+
+The HIE engine's operational parameters are defined as follows:
+
+-   **Database Table:** `hie_scores`
+-   **Score Field:** `score` (a numerical value between 0 and 100 representing compliance or a related metric)
+-   **Required POST Fields:** `driver_id`, `client_id`, `score` (These fields must be present in any data submission to the HIE engine)
+-   **Insertable Fields (all fields that can be provided and stored):**
+    -   `driver_id`
+    -   `client_id`
+    -   `score`
+    -   `hos_status` (e.g., "driving", "on_duty", "off_duty")
+    -   `hours_driven_today`
+    -   `hours_remaining`
+    -   `next_violation_eta_minutes` (Estimated time until the next HOS violation)
+    -   `computed_at` (Timestamp when the score was computed)
+-   **Filterable GET Fields (fields that can be used to query data):**
+    -   `client_id`
+    -   `driver_id`
+
+## Operational Mechanics (Data Flow)
+
+The HIE engine processes data through GET and POST requests.
+
+### GET Request Flow
+
+```
++----------------+       +-------------------+       +---------------------+
+| Client Request | ----> | Engine API (/hie) | ----> | Authentication/Auth |
+| (GET /hie)     |       | (handleGET)       |       | (getAuthUser)       |
++----------------+       +-------------------+       +---------------------+
+        |                          |                          | (Success: admin/dev)
+        |                          |                          v
+        |                          |               +-----------------------+
+        |                          |               | Validate client_id &  |
+        |                          |               | other filter fields   |
+        |                          |               +-----------------------+
+        |                          |                          |
+        |                          v                          v
+        |                  +----------------------------------------------+
+        |                  | Construct SQL Query (SELECT * FROM hie_scores)|
+        |                  | WHERE client_id = ? AND driver_id = ? ...    |
+        |                  | ORDER BY computed_at DESC LIMIT ?            |
+        |                  +----------------------------------------------+
+        |                                        |
+        |                                        v
+        |                           +-----------------------+
+        |<------------------------- | Database (Cloudflare D1)|
+        |    (jsonResponse)         | (env.DB.prepare.all)  |
+        +---------------------------+-----------------------+
+        (JSON Array of HIE scores)
+```
+
+### POST Request Flow
+
+```
++----------------+       +-------------------+       +---------------------+
+| Client Request | ----> | Engine API (/hie) | ----> | Authentication/Auth |
+| (POST /hie)    |       | (handlePOST)      |       | (getAuthUser)       |
++----------------+       +-------------------+       +---------------------+
+        |                          |                          | (Success: dev)
+        |                          |                          v
+        |                          |               +-----------------------+
+        |                          |               | Parse Request Body    |
+        |                          |               | (JSON)                |
+        |                          |               +-----------------------+
+        |                          |                          |
+        |                          v                          v
+        |               +--------------------------------------------------+
+        |               | Validate Required Fields (driver_id, client_id, score) |
+        |               | Validate Score (0-100)                             |
+        |               | Default computed_at if missing                     |
+        +---------------+--------------------------------------------------+
+                        |
+                        v
+               +-----------------------------------------------------+
+               | Construct SQL Insert Query (INSERT INTO hie_scores) |
+               +-----------------------------------------------------+
+                                   |
+                                   v
+                       +-----------------------+       +----------------+
+                       | Database (Cloudflare D1)| ----> | Audit Log      |
+                       | (env.DB.prepare.run)  |       | (logAudit)     |
+                       +-----------------------+       +----------------+
+                                   |
+                                   v
+               +--------------------------------------------------+
+               | Retrieve Inserted Row (SELECT * WHERE id = ?)    |
+               +--------------------------------------------------+
+                                   |
+                                   v
+        +----------------------------------------------------------+
+        |<------------------------- | Client Response (jsonResponse, status 201) |
+        +--------------------------+-------------------------------------------+
+        (JSON of newly inserted HIE score)
+```
+
+## Formulas and Logic
+
+The HIE engine primarily focuses on data aggregation and storage. While explicit "formulas" are not present in the provided code, the logic implies:
+
+-   **Score Validation:** The `score` field must be a number between 0 and 100.
+-   **Timestamping:** If `computed_at` is not provided in a POST request, it defaults to the current UTC timestamp (`new Date().toISOString()`).
+-   **Boolean Field Handling:** Although not directly applicable to HIE's `insertFields` based on the `BOOL_FIELDS` definition, the system handles boolean-like values (0 or 1) for fields like `maintenance_due` or `is_road_safe` in other engines during insertion.
+-   **Data Filtering:** GET requests allow filtering by `client_id` and `driver_id` to retrieve specific HOS scores.
+-   **Ordering and Limiting:** GET results are ordered by `computed_at` in descending order and limited to a maximum of 500 records (default 50).
+-   **Authorization:**
+    -   GET requests require `admin` or `dev` roles.
+    -   POST requests require the `dev` role.
+-   **Audit Logging:** Every successful POST operation triggers an audit log entry, recording the `user_id`, `action` (`engine_score_hie`), `table`, `record_id`, `description`, and `client_ip`.

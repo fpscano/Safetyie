@@ -1,0 +1,119 @@
+# Telematics Intelligence Engine (TIE)
+
+**ID:** `tie`
+**Name:** Telematics Intelligence
+**Description:** Real-time location and speed telemetry
+
+## Purpose
+The TIE engine collects and analyzes real-time telematics data, including vehicle location and speed. It stores and retrieves `tie_scores` in the database, providing current and historical telemetry insights.
+
+## Configuration Details
+
+The TIE engine's operational parameters are defined as follows:
+
+-   **Database Table:** `tie_scores`
+-   **Score Field:** `score` (a numerical value between 0 and 100, possibly reflecting a telematics-derived metric like driving performance or efficiency)
+-   **Required POST Fields:** `vehicle_id`, `client_id`, `score`
+-   **Insertable Fields:**
+    -   `vehicle_id`
+    -   `client_id`
+    -   `score`
+    -   `avg_speed_mph`
+    -   `max_speed_mph`
+    -   `last_lat` (Last recorded latitude)
+    -   `last_lng` (Last recorded longitude)
+    -   `last_seen_at` (Timestamp of the last telemetry update)
+    -   `computed_at` (Timestamp when the score was computed)
+-   **Filterable GET Fields:**
+    -   `client_id`
+    -   `vehicle_id`
+
+## Operational Mechanics (Data Flow)
+
+The TIE engine processes data through GET and POST requests, similar to other engines.
+
+### GET Request Flow
+
+```
++----------------+       +-------------------+       +---------------------+
+| Client Request | ----> | Engine API (/tie) | ----> | Authentication/Auth |
+| (GET /tie)     |       | (handleGET)       |       | (getAuthUser)       |
++----------------+       +-------------------+       +---------------------+
+        |                          |                          | (Success: admin/dev)
+        |                          |                          v
+        |                          |               +-----------------------+
+        |                          |               | Validate client_id &  |
+        |                          |               | other filter fields   |
+        |                          |               +-----------------------+
+        |                          |                          |
+        |                          v                          v
+        |                  +----------------------------------------------+
+        |                  | Construct SQL Query (SELECT * FROM tie_scores)|
+        |                  | WHERE client_id = ? AND vehicle_id = ? ...   |
+        |                  | ORDER BY computed_at DESC LIMIT ?            |
+        |                  +----------------------------------------------+
+        |                                        |
+        |                                        v
+        |                           +-----------------------+
+        |<------------------------- | Database (Cloudflare D1)|
+        |    (jsonResponse)         | (env.DB.prepare.all)  |
+        +---------------------------+-----------------------+
+        (JSON Array of TIE scores)
+```
+
+### POST Request Flow
+
+```
++----------------+       +-------------------+       +---------------------+
+| Client Request | ----> | Engine API (/tie) | ----> | Authentication/Auth |
+| (POST /tie)    |       | (handlePOST)      |       | (getAuthUser)       |
++----------------+       +-------------------+       +---------------------+
+        |                          |                          | (Success: dev)
+        |                          |                          v
+        |                          |               +-----------------------+
+        |                          |               | Parse Request Body    |
+        |                          |               | (JSON)                |
+        |                          |               +-----------------------+
+        |                          |                          |
+        |                          v                          v
+        |               +--------------------------------------------------+
+        |               | Validate Required Fields (vehicle_id, client_id, score) |
+        |               | Validate Score (0-100)                             |
+        |               | Default computed_at if missing                     |
+        +---------------+--------------------------------------------------+
+                        |
+                        v
+               +-----------------------------------------------------+
+               | Construct SQL Insert Query (INSERT INTO tie_scores) |
+               +-----------------------------------------------------+
+                                   |
+                                   v
+                       +-----------------------+       +----------------+
+                       | Database (Cloudflare D1)| ----> | Audit Log      |
+                       | (env.DB.prepare.run)  |       | (logAudit)     |
+                       +-----------------------+       ----------------+
+                                   |
+                                   v
+               +--------------------------------------------------+
+               | Retrieve Inserted Row (SELECT * WHERE id = ?)    |
+               +--------------------------------------------------+
+                                   |
+                                   v
+        +----------------------------------------------------------+
+        |<------------------------- | Client Response (jsonResponse, status 201) |
+        +--------------------------+-------------------------------------------+
+        (JSON of newly inserted TIE score)
+```
+
+## Formulas and Logic
+
+The TIE engine's logic involves:
+
+-   **Score Validation:** The `score` field must be a number between 0 and 100.
+-   **Timestamping:** If `computed_at` is not provided in a POST request, it defaults to the current UTC timestamp.
+-   **Data Filtering:** GET requests allow filtering by `client_id` and `vehicle_id`.
+-   **Ordering and Limiting:** GET results are ordered by `computed_at` DESC and limited to a maximum of 500 records.
+-   **Authorization:**
+    -   GET requests require `admin` or `dev` roles.
+    -   POST requests require the `dev` role.
+-   **Audit Logging:** Every successful POST operation logs an audit event.

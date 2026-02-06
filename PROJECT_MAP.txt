@@ -1,0 +1,113 @@
+═══════════════════════════════════════════════════════════════
+    SECRET SAUCE - SIE PROJECT ORGANIZATION MAP
+═══════════════════════════════════════════════════════════════
+
+📍 Location: C:\Users\FpsCa\OneDrive\Desktop\secret sauce\
+
+┌─────────────────────────────────────────────────────────────┐
+│  YOUR NEW PROJECT STRUCTURE                                 │
+└─────────────────────────────────────────────────────────────┘
+
+secret sauce/
+│
+├── 📄 README.md ..................... Full documentation
+├── 📄 GETTING_STARTED.md ............ Quick start guide
+│
+├── 🌐 website/ ...................... FRONTEND FILES
+│   ├── index.html ................... Homepage
+│   ├── client_login.html ............ Login page
+│   ├── admin-dashboard.html ......... Admin dashboard
+│   ├── admin-manage-users.html ...... User management
+│   ├── about.html ................... About page
+│   ├── contact.html ................. Contact page
+│   ├── styles.css ................... Global styles
+│   ├── _headers ..................... Security headers
+│   └── images/ ...................... All images
+│       ├── SIE Logo.png
+│       ├── C.A.N.O Insudtries.png
+│       └── Chris Head shot.png
+│
+├── ⚙️ cano/ ......................... BACKEND ENGINE
+│   ├── functions/ ................... API endpoints
+│   │   ├── api/v1/auth/ ............. Authentication
+│   │   ├── api/v1/admin/ ............ Admin APIs
+│   │   └── _shared/ ................. Shared utilities
+│   ├── migrations/ .................. Database schemas
+│   │   ├── 0001_platform_tables.sql
+│   │   ├── 0002_fleet_tables.sql
+│   │   ├── 0003_client_users.sql
+│   │   └── 0004_engine_tables.sql
+│   ├── scripts/ ..................... Utility scripts
+│   │   ├── seed-sie-admin.ps1 ....... Seed database
+│   │   └── generate-password-hash.js
+│   ├── .git/ ........................ Git repository
+│   ├── wrangler.toml ................ Cloudflare config
+│   ├── package.json ................. Dependencies
+│   ├── test-local.ps1 ............... Local testing
+│   ├── deploy-combined.ps1 .......... Deployment script
+│   └── Documentation:
+│       ├── VERIFICATION_REPORT.md
+│       ├── DEPLOYMENT_CHECKLIST.md
+│       ├── QUICK_SETUP.md
+│       └── COMPLETE_THIS_ONE_STEP.md
+│
+├── 📔 diary/ ........................ YOUR NOTES
+│   ├── project_documentation.md ..... Project docs
+│   ├── api_key_management.md ........ API keys notes
+│   └── ENGINE/ ...................... Engine notes
+│       ├── sie.txt .................. Safety IE
+│       ├── eie.txt .................. Environment IE
+│       ├── fie.txt .................. Fleet IE
+│       └── (other engines)
+│
+└── 🤖 claude/ ....................... AI CONFIGURATION
+    └── .claude/ ..................... Claude agents
+        └── agents/
+            ├── cf-database-engineer.md
+            └── fullstack-cf-deployer.md
+
+═══════════════════════════════════════════════════════════════
+    QUICK COMMANDS
+═══════════════════════════════════════════════════════════════
+
+🧪 TEST LOCALLY:
+   cd "C:\Users\FpsCa\OneDrive\Desktop\secret sauce\cano"
+   .\test-local.ps1
+
+🚀 DEPLOY:
+   cd "C:\Users\FpsCa\OneDrive\Desktop\secret sauce\cano"
+   .\deploy-combined.ps1
+
+💾 DATABASE:
+   cd "C:\Users\FpsCa\OneDrive\Desktop\secret sauce\cano"
+   npx wrangler d1 execute sie-db --remote --command "SELECT * FROM clients;"
+
+📝 GIT:
+   cd "C:\Users\FpsCa\OneDrive\Desktop\secret sauce\cano"
+   git status
+   git add .
+   git commit -m "Your message"
+   git push
+
+═══════════════════════════════════════════════════════════════
+    LOGIN CREDENTIALS
+═══════════════════════════════════════════════════════════════
+
+Company Code: SIE (any case: SIE, sie, Sie, etc.)
+Email:        admin@sie.com
+Password:     admin123
+
+═══════════════════════════════════════════════════════════════
+    IMPORTANT NOTES
+═══════════════════════════════════════════════════════════════
+
+✅ Git repository is in the cano/ folder
+✅ Database is already seeded with SIE admin user
+✅ All files are organized and ready to use
+✅ Original Cano folder still exists on Desktop (can be deleted)
+
+⚠️  AFTER FIRST DEPLOYMENT:
+    Configure D1 binding in Cloudflare dashboard
+    (See COMPLETE_THIS_ONE_STEP.md in cano/ folder)
+
+═══════════════════════════════════════════════════════════════

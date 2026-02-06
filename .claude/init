@@ -10,7 +10,7 @@ The platform manages clients, users, fleet data, and audit logging.
 - **Project Structure:** The `cano` directory is a git submodule containing the main application
 
 ## Deployment Information
-- **Latest Deployment:** https://d2c6062a.sie-ebe.pages.dev
+- **Latest Deployment:** https://ed45ba67.sie-ebe.pages.dev
 - **Production URL:** https://sie-ebe.pages.dev
 - **Custom Domain:** https://safetyie.com
 - **Cloudflare Project:** sie
@@ -20,11 +20,67 @@ The platform manages clients, users, fleet data, and audit logging.
 - **Database ID:** b3fe982e-d3d7-4cf9-8c6c-274ee5e4682a
 - **Type:** SQLite via Cloudflare D1
 
-## Default Credentials
-**Client Login:**
+## User System & Authentication
+
+### Two User Types:
+1. **SIE Users** (Internal staff - `users` table)
+   - Full platform access to all clients and operations
+   - Login at: `/api/v1/auth/admin-login`
+   - Roles: `dev`, `sales`, `csr`
+   - Different dashboard with full admin controls
+
+2. **Client Users** (Customer users - `client_users` table)
+   - Limited to their own organization only
+   - Login at: `/api/v1/auth/login`
+   - Roles: `manager`, `dispatcher`, `viewer`
+   - Company-specific dashboard
+
+### Default Credentials
+**Client User Login:**
 - Company Code: SIE
 - Email: admin@sie.com
 - Password: admin123
+
+**SIE User Login:** (To be created - see migration below)
+- Use `/api/v1/auth/admin-login` endpoint
+- Requires username/email and password
+
+## IMPORTANT: Pending Migration
+
+**Migration 0005 needs to be run manually** to update SIE user roles from (dev, admin, demo) to (dev, sales, csr).
+
+### Run Migration via Cloudflare Dashboard:
+1. Go to https://dash.cloudflare.com/
+2. Navigate to Workers & Pages → D1 → sie-db → Console
+3. Run the SQL from `cano/migrations/0005_update_sie_roles.sql`:
+
+```sql
+-- Update existing roles
+UPDATE users SET role = 'sales' WHERE role = 'admin';
+UPDATE users SET role = 'csr' WHERE role = 'demo';
+
+-- Recreate users table with new role constraint
+CREATE TABLE IF NOT EXISTS users_new (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('dev', 'sales', 'csr')),
+    is_active INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    created_by INTEGER REFERENCES users_new(id),
+    last_login TEXT
+);
+
+INSERT INTO users_new (id, username, email, password_hash, role, is_active, created_at, created_by, last_login)
+SELECT id, username, email, password_hash, role, is_active, created_at, created_by, last_login FROM users;
+
+DROP TABLE users;
+ALTER TABLE users_new RENAME TO users;
+
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+```
 
 ## Common Commands
 
@@ -75,19 +131,38 @@ git push
 - Added database availability checks to all admin endpoints
 - Made audit logging non-blocking to prevent operation failures
 
+### 2026-02-06 - RBAC Implementation (Role-Based Access Control)
+- **Separated SIE users from client users** with distinct access levels
+- Created `/api/v1/auth/admin-login` endpoint for SIE internal users
+- **SIE users** (dev, sales, csr) have full access to all clients and operations
+- **Client users** (manager, dispatcher, viewer) restricted to their own organization
+- Added authorization helper functions: `getSIEUser()`, `isSIEUser()`, `hasSIERole()`, `hasClientAccess()`, `requireSIEUser()`, `requireSIERoles()`
+- Updated all admin endpoints to enforce proper access control
+- Client managers can add users to their own organization only
+- Migration 0005 created to update role names (needs manual execution)
+
 ## Architecture Notes
 - **Frontend:** Static HTML/CSS/JS served from `/website` directory
 - **Backend:** Cloudflare Pages Functions in `/cano/functions` directory
 - **Database:** Cloudflare D1 (SQLite) with migrations in `/cano/migrations`
-- **Authentication:** JWT tokens with role-based access control
-- **Users:** Separate tables for platform users (`users`) and client users (`client_users`)
+- **Authentication:** JWT tokens with comprehensive role-based access control (RBAC)
+- **Two User Systems:**
+  - **SIE Users** (`users` table): Internal staff with full platform access
+  - **Client Users** (`client_users` table): Customer users limited to their organization
+- **Access Control:**
+  - SIE users can manage all clients and all operations
+  - Client users can only access/manage their own client_id
+  - Different dashboards and permissions for each user type
 
 ## Key Files
 - `cano/wrangler.toml` - Cloudflare configuration
-- `cano/functions/_shared/auth.js` - Authentication utilities
+- `cano/functions/_shared/auth.js` - Authentication & RBAC utilities
 - `cano/functions/_shared/audit.js` - Audit logging
-- `cano/functions/api/v1/auth/login.js` - Client login endpoint
+- `cano/functions/api/v1/auth/login.js` - Client user login endpoint
+- `cano/functions/api/v1/auth/admin-login.js` - SIE user login endpoint
+- `cano/functions/api/v1/admin/*` - Admin endpoints (SIE users only)
 - `cano/migrations/` - Database schema migrations
+- `cano/migrations/0005_update_sie_roles.sql` - PENDING: Role migration
 
 ## Support
 For issues or questions, contact: FPSCano@gmail.com

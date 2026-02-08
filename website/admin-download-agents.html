@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | SIE - Safety Intelligence Engine</title>
+    <title>Download Agents | SIE - Safety Intelligence Engine</title>
     <link rel="stylesheet" href="styles.css">
     <style>
         body {
@@ -66,9 +66,6 @@
         .sidebar-section-title:hover {
             color: var(--accent);
         }
-        .sidebar-section-title .toggle-icon {
-            transition: transform 0.3s ease;
-        }
         .sidebar-section-title.collapsed .toggle-icon {
             transform: rotate(-90deg);
         }
@@ -97,6 +94,59 @@
         .main-content h1 {
             margin-bottom: 20px;
         }
+        /* New styles for agent selection buttons */
+        .agent-selection-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .agent-button {
+            background-color: var(--primary); /* Using primary color for buttons */
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            text-decoration: none; /* For when these become links */
+            display: inline-block;
+        }
+        .agent-button:hover {
+            background-color: var(--accent); /* Accent on hover */
+            transform: translateY(-2px);
+        }
+        .agent-button:active {
+            transform: translateY(0);
+        }
+        .os-selection-container {
+            margin-top: 40px;
+            text-align: center;
+            display: none; /* Hidden by default */
+        }
+        .os-selection-container p {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+        .os-button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin: 0 10px;
+        }
+        .os-button:hover {
+            background-color: var(--accent);
+        }
     </style>
 </head>
 <body>
@@ -104,7 +154,7 @@
         <div class="sidebar-header">SIE Admin</div>
         <nav class="sidebar-nav">
             <ul>
-                <li><a href="admin-dashboard.html" class="active">Dashboard</a></li>
+                <li><a href="admin-dashboard.html">Dashboard</a></li>
             </ul>
 
             <div class="sidebar-section">
@@ -124,7 +174,7 @@
                     <span class="toggle-icon">▼</span>
                 </div>
                 <ul id="download-submenu" class="submenu">
-                    <li><a href="admin-download-agents.html">Download Agents</a></li>
+                    <li><a href="admin-download-agents.html" class="active">Download Agents</a></li>
                 </ul>
             </div>
 
@@ -143,13 +193,23 @@
         </div>
     </div>
     <div class="main-content">
-        <h1>Welcome to the Admin Dashboard!</h1>
-        <p>This is your central hub for managing your SIE client environment.</p>
-        <p>Use the sidebar to navigate through various administrative functions.</p>
+        <h1>Select an Agent to Download</h1>
+        <p>Choose the agent you wish to download. You will then be prompted to select your operating system.</p>
+        
+        <div class="agent-selection-container">
+            <button class="agent-button" data-agent="sarahgpt">SarahGpt</button>
+            <button class="agent-button" data-agent="frankenstein">Frankenstein</button>
+        </div>
+
+        <div id="osSelection" class="os-selection-container">
+            <p>Which operating system are you using?</p>
+            <button class="os-button" data-os="windows">Windows</button>
+            <button class="os-button" data-os="mac">Mac</button>
+        </div>
     </div>
 
     <script>
-        // Toggle submenu function
+        // Toggle submenu function (copied from admin-dashboard for consistency)
         function toggleSubmenu(id) {
             const submenu = document.getElementById(id);
             const title = submenu.previousElementSibling;
@@ -169,6 +229,31 @@
         if (!token) {
             window.location.href = '/client_login.html'; // Redirect if no token
         }
+
+        // Agent selection logic
+        const agentButtons = document.querySelectorAll('.agent-button');
+        const osSelectionContainer = document.getElementById('osSelection');
+        let selectedAgent = '';
+
+        agentButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                selectedAgent = button.dataset.agent;
+                osSelectionContainer.style.display = 'block'; // Show OS selection
+                // Optionally, highlight selected agent button
+                agentButtons.forEach(btn => btn.classList.remove('selected'));
+                button.classList.add('selected');
+            });
+        });
+
+        const osButtons = document.querySelectorAll('.os-button');
+        osButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const selectedOS = button.dataset.os;
+                alert(`You selected to download ${selectedAgent} for ${selectedOS}. (Download logic not implemented yet)`);
+                // In a real application, you would trigger the download here
+                // e.g., window.location.href = `/download/${selectedAgent}/${selectedOS}`;
+            });
+        });
     </script>
 </body>
 </html>

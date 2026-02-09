@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Client User | SIE Admin</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            display: flex;
+            background-color: var(--surface);
+        }
+        .sidebar {
+            width: 250px;
+            background-color: var(--background);
+            color: var(--text);
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+        }
+        .sidebar-header {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .sidebar-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar-nav li {
+            margin-bottom: 10px;
+        }
+        .sidebar-nav a {
+            display: block;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background-color: var(--accent);
+            color: white;
+        }
+        .sidebar-section {
+            margin-bottom: 20px;
+        }
+        .sidebar-section-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            padding: 0 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .sidebar-section-title:hover {
+            color: var(--accent);
+        }
+        .sidebar-section-title .toggle-icon {
+            transition: transform 0.3s ease;
+        }
+        .sidebar-section-title.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+        .submenu {
+            padding-left: 15px;
+            max-height: 500px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+        }
+        .submenu.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+        .submenu li {
+            margin-bottom: 5px;
+        }
+        .submenu a {
+            font-size: 0.9rem;
+            padding: 8px 15px;
+        }
+        .main-content {
+            margin-left: 250px;
+            flex-grow: 1;
+            padding: 40px;
+            color: var(--text);
+        }
+        .main-content h1 {
+            margin-bottom: 10px;
+        }
+        .client-info {
+            background-color: var(--background);
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .client-info strong {
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+        .form-container {
+            max-width: 600px;
+            background-color: var(--background);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text);
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+            flex: 1;
+        }
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+        .btn-primary:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background-color: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover {
+            background-color: var(--border);
+        }
+        .error-message {
+            color: #dc2626;
+            background-color: #fee2e2;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+        .success-message {
+            color: #166534;
+            background-color: #dcfce7;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+        .help-text {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">SIE Admin</div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li><a href="admin-dashboard.html">Dashboard</a></li>
+            </ul>
+
+            <div class="sidebar-section">
+                <div class="sidebar-section-title" onclick="toggleSubmenu('clients-submenu')">
+                    <span>Clients</span>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <ul id="clients-submenu" class="submenu">
+                    <li><a href="admin-view-clients.html" class="active">View Clients</a></li>
+                    <li><a href="admin-add-client.html">Add Client</a></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-section-title" onclick="toggleSubmenu('sie-admin-submenu')">
+                    <span>SIE Admin Control</span>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <ul id="sie-admin-submenu" class="submenu">
+                    <li><a href="admin-manage-users.html">Manage Users</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border);">
+            <a href="#" id="logout-btn">Logout</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <h1>Add Client User</h1>
+        <div class="client-info">
+            Adding user to: <strong id="clientName">Loading...</strong>
+        </div>
+
+        <div class="form-container">
+            <form id="userForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">First Name *</label>
+                        <input type="text" id="firstName" required placeholder="John">
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name *</label>
+                        <input type="text" id="lastName" required placeholder="Doe">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input type="email" id="email" required placeholder="john.doe@company.com">
+                    <div class="help-text">User will login with this email address</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password *</label>
+                    <input type="password" id="password" required minlength="6" placeholder="Minimum 6 characters">
+                    <div class="help-text">Minimum 6 characters</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="role">Role *</label>
+                    <select id="role" required>
+                        <option value="">Select a role...</option>
+                        <option value="manager">Manager - Full access to client dashboard and users</option>
+                        <option value="supervisor">Supervisor - View and manage fleet operations</option>
+                        <option value="operator">Operator - View-only access</option>
+                    </select>
+                    <div class="help-text">Determines what the user can access</div>
+                </div>
+
+                <div id="errorMessage" class="error-message"></div>
+                <div id="successMessage" class="success-message"></div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">Add User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v1';
+        const token = localStorage.getItem('sie_token');
+
+        if (!token) {
+            window.location.href = '/client_login.html';
+        }
+
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const clientId = urlParams.get('client_id');
+        const clientCode = urlParams.get('client_code');
+
+        if (!clientId || !clientCode) {
+            alert('Missing client information');
+            window.location.href = 'admin-view-clients.html';
+        }
+
+        document.getElementById('clientName').textContent = clientCode;
+
+        // Toggle submenu function
+        function toggleSubmenu(id) {
+            const submenu = document.getElementById(id);
+            const title = submenu.previousElementSibling;
+            submenu.classList.toggle('collapsed');
+            title.classList.toggle('collapsed');
+        }
+
+        // Logout functionality
+        document.getElementById('logout-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('sie_token');
+            localStorage.removeItem('sie_user');
+            window.location.href = '/client_login.html';
+        });
+
+        // Cancel button
+        document.getElementById('cancelBtn').addEventListener('click', () => {
+            window.location.href = `admin-client-users.html?client_id=${clientId}&client_code=${clientCode}`;
+        });
+
+        // Form elements
+        const userForm = document.getElementById('userForm');
+        const firstNameInput = document.getElementById('firstName');
+        const lastNameInput = document.getElementById('lastName');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const roleSelect = document.getElementById('role');
+        const submitBtn = document.getElementById('submitBtn');
+        const errorMessageDiv = document.getElementById('errorMessage');
+        const successMessageDiv = document.getElementById('successMessage');
+
+        // Form submission
+        userForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMessageDiv.style.display = 'none';
+            successMessageDiv.style.display = 'none';
+
+            const firstName = firstNameInput.value.trim();
+            const lastName = lastNameInput.value.trim();
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const role = roleSelect.value;
+
+            // Validation
+            if (!firstName || !lastName || !email || !password || !role) {
+                errorMessageDiv.textContent = 'Please fill in all required fields';
+                errorMessageDiv.style.display = 'block';
+                return;
+            }
+
+            if (password.length < 6) {
+                errorMessageDiv.textContent = 'Password must be at least 6 characters';
+                errorMessageDiv.style.display = 'block';
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Adding User...';
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/client-users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        client_id: Number(clientId),
+                        email: email,
+                        password: password,
+                        first_name: firstName,
+                        last_name: lastName,
+                        role: role
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to add user');
+                }
+
+                successMessageDiv.textContent = 'User added successfully!';
+                successMessageDiv.style.display = 'block';
+
+                // Redirect after 2 seconds
+                setTimeout(() => {
+                    window.location.href = `admin-client-users.html?client_id=${clientId}&client_code=${clientCode}`;
+                }, 2000);
+
+            } catch (err) {
+                errorMessageDiv.textContent = 'Error: ' + err.message;
+                errorMessageDiv.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Add User';
+            }
+        });
+    </script>
+</body>
+</html>

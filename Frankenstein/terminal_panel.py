@@ -7,7 +7,7 @@ from typing import Optional, List
 
 from llm_manager import LLMManager
 
-ASCII_VICTORS_LAB = """
+ASCII_VICTORS_LAB = r"""
  _   _ _____ _____ ___ ___ _   _   _   _ ____  
 | | | |___  |___  |_ _/ __| | | | | | | |___ 
 | |_| | / /| | / / | | (_ | |_| | | |_| | __) |
@@ -16,21 +16,21 @@ ASCII_VICTORS_LAB = """
 """
 
 FANGS_ANIMATION_FRAMES = [
-    """
+    r"""
       .---.
      / \ / 
     |   V   |
      \     /
       `---'
     """,
-    """
+    r"""
       .---.
      / \|/ 
     |   X   |
      \     /
       `---'
     """,
-    """
+    r"""
       .---.
      / \_/ 
     |  / \  |
@@ -40,18 +40,18 @@ FANGS_ANIMATION_FRAMES = [
 ]
 
 LIGHTNING_ANIMATION_FRAMES = [
-    """
+    r"""
        .
       .
      .
     """,
-    """
+    r"""
        .
       .
      . 
         
     """,
-    """
+    r"""
        .
       .
      . 
@@ -94,27 +94,19 @@ class TerminalPanel(QWidget):
             # self.output.clear() # Clear the terminal before displaying SarahGPT auto-start messages
             if "Error" not in response_msg:
                 self._is_gemini_chat_active = True
-                # self.output.append(f"
-<span style='color:#FF69B4;'>{response_msg}</span>") # Hidden as per user request
-                # self.output.append(f"<span style='color:#FF69B4;'>SarahGPT is now active. Type your messages directly. Use '!gemini chat end' to stop.</span>
-") # Hidden as per user request
+                # self.output.append(f"<span style='color:#FF69B4;'>{response_msg}</span>") # Hidden as per user request
+                # self.output.append(f"<span style='color:#FF69B4;'>SarahGPT is now active. Type your messages directly. Use '!gemini chat end' to stop.</span>") # Hidden as per user request
                 # Auto-send a "hello" message
                 hello_response = self.llm_manager.send_gemini_chat_message(
                     prompt="hello",
                     session_id=self._current_gemini_chat_session_id
                 )
                 self.output.append(f"") # Add an empty line for spacing before the auto-response
-                self.output.append(f"<span style='color:#FF69B4;'>SarahGPT Chat Response:</span>
-{hello_response}
-")
+                self.output.append(f"<span style='color:#FF69B4;'>SarahGPT Chat Response:</span>\n{hello_response}\n")
             else:
-                self.output.append(f"
-<span style='color:red;'>{response_msg}</span>
-")
+                self.output.append(f"\n<span style='color:red;'>{response_msg}</span>\n")
         else:
-            self.output.append(f"
-<span style='color:red;'>Error: LLM Manager not configured for auto-start.</span>
-")
+            self.output.append(f"\n<span style='color:red;'>Error: LLM Manager not configured for auto-start.</span>\n")
 
     def _detect_shell(self) -> str:
         if sys.platform == "win32":
@@ -227,11 +219,9 @@ class TerminalPanel(QWidget):
                     on_finish=lambda: self._continue_gemini_chat_start_after_animation(response_msg)
                 )
             else:
-                self.output.append(f"<span style='color:red;'>{response_msg}</span>
-")
+                self.output.append(f"<span style='color:red;'>{response_msg}</span>\n")
         else:
-            self.output.append(f"<span style='color:red;'>Error: LLM Manager not configured.</span>
-")
+            self.output.append(f"<span style='color:red;'>Error: LLM Manager not configured.</span>\n")
 
     def _continue_gemini_chat_start_after_animation(self, response_msg):
         # Auto-send a "hello" message after animation and initial chat start
@@ -239,21 +229,15 @@ class TerminalPanel(QWidget):
             prompt="hello",
             session_id=self._current_gemini_chat_session_id
         )
-        self.output.append(f"
-<span style='color:#FF69B4;'>SarahGPT Chat Response:</span>
-{hello_response}
-")
+        self.output.append(f"\n<span style='color:#FF69B4;'>SarahGPT Chat Response:</span>\n{hello_response}\n")
 
     def _handle_gemini_chat_end_command(self):
         if self.llm_manager:
             response_msg = self.llm_manager.end_gemini_chat(session_id=self._current_gemini_chat_session_id)
             self._is_gemini_chat_active = False
-            self.output.append(f"
-<span style='color:#FF69B4;'>{response_msg}</span>
-") # Use pink for consistency
+            self.output.append(f"\n<span style='color:#FF69B4;'>{response_msg}</span>\n") # Use pink for consistency
         else:
-            self.output.append(f"<span style='color:red;'>Error: LLM Manager not configured.</span>
-")
+            self.output.append(f"<span style='color:red;'>Error: LLM Manager not configured.</span>\n")
 
     def _handle_gemini_command(self, command: str, parts: Optional[List[str]]):
         # This handles both active chat messages and single-turn !gemini calls
@@ -264,8 +248,7 @@ class TerminalPanel(QWidget):
 
     def _continue_gemini_call_after_animation(self, command: str, parts: Optional[List[str]]):
         if not self.llm_manager:
-            self.output.append(f"<span style='color:red;'>Error: LLM Manager not configured.</span>
-")
+            self.output.append(f"<span style='color:red;'>Error: LLM Manager not configured.</span>\n")
             return
 
         if self._is_gemini_chat_active and parts is None: # Active chat message
@@ -305,24 +288,17 @@ class TerminalPanel(QWidget):
             )
         else:
             response_prefix = "SarahGPT Chat Response:" if is_chat else "SarahGPT Response:"
-            self.output.append(f"
-<span style='color:#FF69B4;'>{response_prefix}</span>
-{response}
-")
+            self.output.append(f"\n<span style='color:#FF69B4;'>{response_prefix}</span>\n{response}\n")
 
     def _continue_ollama_fallback_after_animation(self, response: str):
         # Append ASCII art and descriptions after lightning animation
-        self.output.append(f"
-<span style='color:#FF69B4;'>{ASCII_VICTORS_LAB}</span>
-") # ASCII art for fallback
-        self.output.append(f"<span style='color:#FF69B4;'>{response}</span>
-") # The full response from llm_manager now includes descriptions
+        self.output.append(f"\n<span style='color:#FF69B4;'>{ASCII_VICTORS_LAB}</span>\n") # ASCII art for fallback
+        self.output.append(f"<span style='color:#FF69B4;'>{response}</span>\n") # The full response from llm_manager now includes descriptions
 
     def _handle_other_llm_command(self, command: str, parts: List[str]):
         # This is for Ollama and Claude single-turn calls
         if not self.llm_manager:
-            self.output.append(f"<span style='color:red;'>Error: LLM Manager not configured.</span>
-")
+            self.output.append(f"<span style='color:red;'>Error: LLM Manager not configured.</span>\n")
             return
 
         llm_cmd = parts[0][1:].lower()
@@ -339,8 +315,7 @@ class TerminalPanel(QWidget):
             else:
                 prompt = potential_model_or_prompt_start
         
-        self.output.append(f"<span style='color:#00FFFF;'>Calling {llm_type.capitalize()}...</span>
-")
+        self.output.append(f"<span style='color:#00FFFF;'>Calling {llm_type.capitalize()}...</span>\n")
         response = "Error: Invalid LLM type or unhandled."
         try:
             if llm_type == "ollama":
@@ -350,14 +325,10 @@ class TerminalPanel(QWidget):
         except Exception as e:
             response = f"Error calling {llm_type.capitalize()} API: {e}"
         
-        self.output.append(f"
-<span style='color:#FF69B4;'>{llm_type.capitalize()} Response:</span>
-{response}
-")
+        self.output.append(f"\n<span style='color:#FF69B4;'>{llm_type.capitalize()} Response:</span>\n{response}\n")
 
     def _handle_shell_command(self, command: str):
-        self.process.write((command + "
-").encode())
+        self.process.write((command + "\n").encode())
 
     def _read_stdout(self):
         data = self.process.readAllStandardOutput().data().decode().strip()
@@ -370,8 +341,7 @@ class TerminalPanel(QWidget):
             self.output.append(f"<span style='color:red;'>{data}</span>")
 
     def _terminal_finished(self, exit_code, exit_status):
-        self.output.append(f"
---- Terminal exited with code {exit_code} ---")
+        self.output.append(f"\n--- Terminal exited with code {exit_code} ---")
         self.input.setEnabled(False)
         self.process.close()
         

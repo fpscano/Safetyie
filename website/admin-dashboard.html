@@ -223,7 +223,7 @@
             localStorage.removeItem('sie_token');
             localStorage.removeItem('sie_user');
             localStorage.removeItem('client_id');
-            window.location.href = '/client_login.html';
+            window.location.href = '/admin-login.html';
         });
 
         // Load and display clients
@@ -237,6 +237,13 @@
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
+                if (response.status === 401 || response.status === 403) {
+                    // Token expired or invalid — force re-login
+                    localStorage.removeItem('sie_token');
+                    localStorage.removeItem('sie_user');
+                    window.location.href = '/admin-login.html';
+                    return;
+                }
                 if (!response.ok) {
                     throw new Error(`Failed to load clients: ${response.status}`);
                 }

@@ -245,7 +245,7 @@
                     <i class="fas fa-users"></i>
                 </div>
                 <div class="card-body">
-                    <p class="metric-value" id="totalUsers">0</p>
+                    <p class="metric-value" id="totalUsers">--</p>
                     <p class="metric-label">Registered Users</p>
                 </div>
             </div>
@@ -256,20 +256,32 @@
                     <i class="fas fa-user-check"></i>
                 </div>
                 <div class="card-body">
-                    <p class="metric-value" id="activeUsers">0</p>
+                    <p class="metric-value" id="activeUsers">--</p>
                     <p class="metric-label">Currently Active</p>
                 </div>
             </div>
 
-            <div class="card wide-card">
+            <div class="card">
                 <div class="card-header">
-                    <h3>System Status</h3>
-                    <i class="fas fa-info-circle"></i>
+                    <h3>Fleet</h3>
+                    <i class="fas fa-truck"></i>
                 </div>
                 <div class="card-body">
-                    <p style="padding: 20px; color: #666; text-align: center;">
-                        Welcome to your client dashboard. Use the sidebar menu to manage users and view audit logs.
-                    </p>
+                    <p class="metric-value" id="totalVehicles">--</p>
+                    <p class="metric-label">Total Vehicles</p>
+                    <p style="margin-top:8px; font-size:0.9em; color:#34c759;" id="activeVehicles"></p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Drivers</h3>
+                    <i class="fas fa-id-card"></i>
+                </div>
+                <div class="card-body">
+                    <p class="metric-value" id="totalDrivers">--</p>
+                    <p class="metric-label">Total Drivers</p>
+                    <p style="margin-top:8px; font-size:0.9em; color:#34c759;" id="activeDrivers"></p>
                 </div>
             </div>
         </section>
@@ -357,8 +369,11 @@
                 }
             }
 
-            // Load client users count
-            await loadClientUsers();
+            // Load all client data in parallel
+            await Promise.all([
+                loadClientUsers(),
+                loadFleet()
+            ]);
         }
 
         function displayClientInfo(clientData) {
@@ -396,6 +411,31 @@
                 }
             } catch (err) {
                 console.error('Error fetching client users:', err);
+            }
+        }
+
+        async function loadFleet() {
+            try {
+                const [vRes, dRes] = await Promise.all([
+                    fetch(`${API_BASE}/fleet/vehicles?client_id=${clientId}`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch(`${API_BASE}/fleet/drivers?client_id=${clientId}`,  { headers: { 'Authorization': `Bearer ${token}` } })
+                ]);
+
+                if (vRes.ok) {
+                    const vehicles = await vRes.json();
+                    document.getElementById('totalVehicles').textContent = vehicles.length;
+                    const active = vehicles.filter(v => v.status === 'active').length;
+                    if (active > 0) document.getElementById('activeVehicles').textContent = active + ' active';
+                }
+
+                if (dRes.ok) {
+                    const drivers = await dRes.json();
+                    document.getElementById('totalDrivers').textContent = drivers.length;
+                    const active = drivers.filter(d => d.status === 'active').length;
+                    if (active > 0) document.getElementById('activeDrivers').textContent = active + ' active';
+                }
+            } catch (err) {
+                console.error('Error loading fleet:', err);
             }
         }
 

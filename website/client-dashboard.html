@@ -10,6 +10,8 @@
         body {
             display: flex;
             background-color: #f9f9fc;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
         .sidebar {
             width: 250px;
@@ -100,34 +102,18 @@
             margin: 0;
             font-size: 1.8em;
             font-weight: 700;
-        }
-        .back-button {
-            background-color: #0070c9;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: background-color 0.3s;
-        }
-        .back-button:hover {
-            background-color: #0056b3;
+            color: #1d1d1f;
         }
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
+            gap: 25px;
         }
         .card {
             background-color: white;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             padding: 25px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
         .card-header {
             display: flex;
@@ -139,98 +125,66 @@
         }
         .card-header h3 {
             margin: 0;
-            font-size: 1.3em;
+            font-size: 1.2em;
             font-weight: 700;
+            color: #1d1d1f;
         }
         .card-header i {
             font-size: 1.5em;
-            color: #6a6a6e;
-        }
-        .score-display {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px 0;
-        }
-        .score-ring {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            border: 10px solid #e2e2e6;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 15px;
-        }
-        .score-ring.safe { border-color: #34c759; }
-        .score-ring.monitor { border-color: #ff9800; }
-        .score-ring.intervene { border-color: #fd7e14; }
-        .score-ring.critical { border-color: #dc3545; }
-        .score-number {
-            font-size: 3.5em;
-            font-weight: 900;
-        }
-        .score-label {
-            font-size: 1.1em;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        .score-label.safe { color: #34c759; }
-        .score-label.monitor { color: #ff9800; }
-        .score-label.intervene { color: #fd7e14; }
-        .score-label.critical { color: #dc3545; }
-        .engines-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-        }
-        .engine-item {
-            background-color: #f0f2f5;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-        }
-        .engine-abbr {
-            font-size: 1.2em;
-            font-weight: 700;
             color: #0070c9;
-            margin-bottom: 5px;
         }
-        .engine-name {
-            font-size: 0.8em;
+        .card-body {
             color: #6a6a6e;
-            margin-bottom: 10px;
         }
-        .engine-score {
-            font-size: 1.8em;
-            font-weight: 800;
-        }
-        .engine-score.safe { color: #34c759; }
-        .engine-score.monitor { color: #ff9800; }
-        .engine-score.intervene { color: #fd7e14; }
-        .engine-score.critical { color: #dc3545; }
         .metric-value {
             font-size: 2.5em;
             font-weight: 800;
             color: #0070c9;
+            margin: 10px 0;
         }
         .metric-label {
             font-size: 0.9em;
             color: #6a6a6e;
             margin-top: 5px;
         }
-        .no-data {
-            text-align: center;
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        .info-value {
             color: #6a6a6e;
-            font-style: italic;
-            padding: 20px;
         }
-        .overall-safety-score {
-            grid-column: span 1;
-            grid-row: span 2;
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
         }
-        .engine-scores-card {
+        .status-active {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .status-inactive {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .wide-card {
             grid-column: span 2;
+        }
+        @media (max-width: 900px) {
+            .wide-card {
+                grid-column: span 1;
+            }
         }
     </style>
 </head>
@@ -243,123 +197,79 @@
         <nav class="sidebar-nav">
             <ul>
                 <li><a href="#" class="active"><i class="fas fa-home"></i> Dashboard Home</a></li>
-                <li><a href="#"><i class="fas fa-clock"></i> Hours Intelligence</a></li>
-                <li><a href="#"><i class="fas fa-exclamation-triangle"></i> Event Intelligence</a></li>
-                <li><a href="#"><i class="fas fa-wrench"></i> Fault Intelligence</a></li>
-                <li><a href="#"><i class="fas fa-tachometer-alt"></i> Telematics</a></li>
-                <li><a href="#"><i class="fas fa-clipboard-check"></i> Inspections</a></li>
-                <li><a href="#"><i class="fas fa-cloud-sun-rain"></i> Weather</a></li>
-                <li><a href="#"><i class="fas fa-brain"></i> Predictions</a></li>
-                <li><a href="#"><i class="fas fa-truck-moving"></i> Fleet Overview</a></li>
-                <li><a href="#"><i class="fas fa-users"></i> Drivers</a></li>
+                <li><a href="#"><i class="fas fa-users"></i> User Management</a></li>
+                <li><a href="#"><i class="fas fa-history"></i> Audit Log</a></li>
+                <li><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
             </ul>
         </nav>
         <div class="sidebar-footer">
             <a href="#" id="back-btn" style="display: none;"><i class="fas fa-arrow-left"></i> Back to Admin</a>
+            <a href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>
     </div>
 
     <main class="main-content">
         <header class="navbar">
             <h1 id="pageTitle">Loading Dashboard...</h1>
-            <!-- <a href="admin-view-clients.html" class="back-button">
-                <i class="fas fa-arrow-left"></i> Back to Clients
-            </a> -->
         </header>
 
         <section class="dashboard-grid">
-            <div class="card overall-safety-score">
+            <div class="card wide-card">
                 <div class="card-header">
-                    <h3>SIE - Overall Safety Score</h3>
-                    <i class="fas fa-shield-alt"></i>
+                    <h3>Client Information</h3>
+                    <i class="fas fa-building"></i>
                 </div>
                 <div class="card-body">
-                    <div class="score-display">
-                        <div class="score-ring" id="scoreRing">
-                            <span class="score-number" id="sieScore">--</span>
-                        </div>
-                        <p class="score-label" id="scoreLabel">Loading...</p>
+                    <div class="info-row">
+                        <span class="info-label">Client Code</span>
+                        <span class="info-value" id="clientCodeDisplay">--</span>
                     </div>
-                    <p class="no-data" id="scoreDetail">Analyzing fleet data...</p>
-                </div>
-            </div>
-
-            <div class="card engine-scores-card">
-                <div class="card-header">
-                    <h3>Intelligence Engines Status</h3>
-                    <i class="fas fa-brain"></i>
-                </div>
-                <div class="card-body">
-                    <div class="engines-grid">
-                        <div class="engine-item">
-                            <div class="engine-abbr">HIE</div>
-                            <div class="engine-name">Hours of Service</div>
-                            <div class="engine-score" id="hie-score">--</div>
-                        </div>
-                        <div class="engine-item">
-                            <div class="engine-abbr">EIE</div>
-                            <div class="engine-name">Event Intelligence</div>
-                            <div class="engine-score" id="eie-score">--</div>
-                        </div>
-                        <div class="engine-item">
-                            <div class="engine-abbr">FIE</div>
-                            <div class="engine-name">Fault Intelligence</div>
-                            <div class="engine-score" id="fie-score">--</div>
-                        </div>
-                        <div class="engine-item">
-                            <div class="engine-abbr">TIE</div>
-                            <div class="engine-name">Telematics</div>
-                            <div class="engine-score" id="tie-score">--</div>
-                        </div>
-                        <div class="engine-item">
-                            <div class="engine-abbr">DVIRIE</div>
-                            <div class="engine-name">Inspections</div>
-                            <div class="engine-score" id="dvirie-score">--</div>
-                        </div>
-                        <div class="engine-item">
-                            <div class="engine-abbr">WIE</div>
-                            <div class="engine-name">Weather</div>
-                            <div class="engine-score" id="wie-score">--</div>
-                        </div>
-                        <div class="engine-item">
-                            <div class="engine-abbr">PIE</div>
-                            <div class="engine-name">Predictions</div>
-                            <div class="engine-score" id="pie-score">--</div>
-                        </div>
+                    <div class="info-row">
+                        <span class="info-label">Client Name</span>
+                        <span class="info-value" id="clientNameDisplay">--</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Status</span>
+                        <span class="info-value" id="clientStatusDisplay">--</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Created</span>
+                        <span class="info-value" id="clientCreatedDisplay">--</span>
                     </div>
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-header">
-                    <h3>Total Fleet</h3>
-                    <i class="fas fa-truck"></i>
+                    <h3>Total Users</h3>
+                    <i class="fas fa-users"></i>
                 </div>
                 <div class="card-body">
-                    <p class="metric-value" id="totalFleet">0</p>
-                    <p class="metric-label">Active Vehicles</p>
+                    <p class="metric-value" id="totalUsers">0</p>
+                    <p class="metric-label">Registered Users</p>
                 </div>
             </div>
 
             <div class="card">
                 <div class="card-header">
-                    <h3>Active Drivers</h3>
-                    <i class="fas fa-id-card-alt"></i>
+                    <h3>Active Users</h3>
+                    <i class="fas fa-user-check"></i>
                 </div>
                 <div class="card-body">
-                    <p class="metric-value" id="activeDrivers">0</p>
+                    <p class="metric-value" id="activeUsers">0</p>
                     <p class="metric-label">Currently Active</p>
                 </div>
             </div>
 
-            <div class="card">
+            <div class="card wide-card">
                 <div class="card-header">
-                    <h3>Critical Alerts</h3>
-                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>System Status</h3>
+                    <i class="fas fa-info-circle"></i>
                 </div>
                 <div class="card-body">
-                    <p class="metric-value" id="criticalAlerts">0</p>
-                    <p class="metric-label">Require Attention</p>
+                    <p style="padding: 20px; color: #666; text-align: center;">
+                        Welcome to your client dashboard. Use the sidebar menu to manage users and view audit logs.
+                    </p>
                 </div>
             </div>
         </section>
@@ -373,7 +283,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const clientCodeParam = urlParams.get('client');
 
-        let clientId = localStorage.getItem('client_id'); // Get client_id from localStorage
+        let clientId = localStorage.getItem('client_id');
         let isAdminView = false;
         let adminViewClientCode = null;
 
@@ -381,62 +291,9 @@
         if (clientCodeParam && token) {
             isAdminView = true;
             adminViewClientCode = clientCodeParam;
-            // We'll fetch the client_id from the API using the client_code
         } else if (!token || !clientId) {
             // Regular client user must have both token and client_id
             window.location.href = '/client_login.html';
-        }
-
-        // Modified updateSIEScore to accept determination_level
-        function updateSIEScore(score, determinationLevel) {
-            const scoreEl = document.getElementById('sieScore');
-            const labelEl = document.getElementById('scoreLabel');
-            const detailEl = document.getElementById('scoreDetail');
-            const ringEl = document.getElementById('scoreRing');
-
-            scoreEl.textContent = score;
-
-            let status, detail, className;
-            switch (determinationLevel) {
-                case 'safe':
-                    status = 'SAFE TO OPERATE';
-                    detail = 'Fleet is operating within safe parameters.';
-                    className = 'safe';
-                    break;
-                case 'monitor':
-                    status = 'MONITOR';
-                    detail = 'Minor concerns detected. Increased attention recommended.';
-                    className = 'monitor';
-                    break;
-                case 'intervene':
-                    status = 'INTERVENE';
-                    detail = 'Significant risk detected. Immediate action required.';
-                    className = 'intervene';
-                    break;
-                case 'out_of_service':
-                    status = 'OUT OF SERVICE';
-                    detail = 'Critical risk. Immediate removal from operation recommended.';
-                    className = 'critical';
-                    break;
-                default:
-                    status = 'UNKNOWN';
-                    detail = 'No determination level available.';
-                    className = '';
-            }
-
-            ringEl.className = 'score-ring ' + className;
-            labelEl.textContent = status;
-            labelEl.className = 'score-label ' + className;
-            detailEl.textContent = detail;
-            detailEl.classList.remove('no-data'); // Remove initial no-data style
-            detailEl.classList.add('show');
-        }
-
-        function getScoreClass(score) {
-            if (score < 30) return 'safe';
-            if (score < 50) return 'monitor';
-            if (score < 75) return 'intervene';
-            return 'critical';
         }
 
         async function loadDashboard() {
@@ -456,9 +313,8 @@
                         const clientData = await clientResponse.json();
                         console.log('Client data received:', clientData);
 
-                        clientId = clientData.id; // Set the client_id for admin view
-                        document.getElementById('clientName').textContent = clientData.client_name || clientData.client_code;
-                        document.getElementById('pageTitle').textContent = `${clientData.client_name || clientData.client_code} Dashboard`;
+                        clientId = clientData.id;
+                        displayClientInfo(clientData);
                     } else {
                         const errorText = await clientResponse.text();
                         console.error('Failed to fetch client details:', clientResponse.status, errorText);
@@ -473,7 +329,7 @@
                     return;
                 }
             } else {
-                // Regular client user view - fetch client name
+                // Regular client user view - fetch client data by client_id
                 console.log('Fetching client data for regular view, client_id:', clientId);
 
                 if (!clientId) {
@@ -491,8 +347,7 @@
                     if (clientResponse.ok) {
                         const clientData = await clientResponse.json();
                         console.log('Client data received:', clientData);
-                        document.getElementById('clientName').textContent = clientData.client_name || clientData.client_code;
-                        document.getElementById('pageTitle').textContent = `${clientData.client_name || clientData.client_code} Dashboard`;
+                        displayClientInfo(clientData);
                     } else {
                         const errorText = await clientResponse.text();
                         console.error('Failed to fetch client details:', clientResponse.status, errorText);
@@ -502,91 +357,46 @@
                 }
             }
 
-            // Fetch SIE score
-            console.log('Fetching SIE score for client_id:', clientId);
+            // Load client users count
+            await loadClientUsers();
+        }
 
+        function displayClientInfo(clientData) {
+            document.getElementById('clientName').textContent = clientData.client_name || clientData.client_code;
+            document.getElementById('pageTitle').textContent = `${clientData.client_name || clientData.client_code} Dashboard`;
+            document.getElementById('clientCodeDisplay').textContent = clientData.client_code || '--';
+            document.getElementById('clientNameDisplay').textContent = clientData.client_name || '--';
+
+            const statusBadge = clientData.is_active
+                ? '<span class="status-badge status-active">Active</span>'
+                : '<span class="status-badge status-inactive">Inactive</span>';
+            document.getElementById('clientStatusDisplay').innerHTML = statusBadge;
+
+            const createdDate = clientData.created_at ? new Date(clientData.created_at).toLocaleDateString() : '--';
+            document.getElementById('clientCreatedDisplay').textContent = createdDate;
+        }
+
+        async function loadClientUsers() {
             try {
-                const sieResponse = await fetch(`${API_BASE}/engines/sie?client_id=${clientId}`, {
+                console.log('Fetching client users for client_id:', clientId);
+                const response = await fetch(`${API_BASE}/admin/clients/${clientId}/users`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                console.log('SIE score response status:', sieResponse.status);
+                if (response.ok) {
+                    const users = await response.json();
+                    console.log('Client users:', users);
 
-                if (sieResponse.ok) {
-                    const sieData = await sieResponse.json();
-                    console.log('SIE score data:', sieData);
+                    document.getElementById('totalUsers').textContent = users.length || 0;
 
-                    if (sieData.results && sieData.results.length > 0) {
-                        // Assuming the latest SIE score is the first one
-                        updateSIEScore(sieData.results[0].determination_score, sieData.results[0].determination_level);
-                    } else {
-                        console.warn('No SIE data found for this client');
-                        document.getElementById('scoreDetail').textContent = 'No SIE data available for this client.';
-                        document.getElementById('scoreDetail').classList.add('show');
-                    }
+                    const activeCount = users.filter(u => u.is_active).length;
+                    document.getElementById('activeUsers').textContent = activeCount || 0;
                 } else {
-                    const errorText = await sieResponse.text();
-                    console.error('Failed to fetch SIE score:', sieResponse.status, errorText);
-                    document.getElementById('scoreDetail').textContent = `Error loading score data: ${errorText}`;
+                    console.error('Failed to fetch client users:', response.status);
                 }
             } catch (err) {
-                console.error('Error fetching SIE score:', err);
-                document.getElementById('scoreDetail').textContent = `Connection error: ${err.message}`;
+                console.error('Error fetching client users:', err);
             }
-
-            // Fetch individual engine scores
-            console.log('Fetching individual engine scores for client_id:', clientId);
-
-            const engineCodes = ['hie', 'eie', 'fie', 'tie', 'dvirie', 'wie', 'pie'];
-            for (const code of engineCodes) {
-                try {
-                    const engineResponse = await fetch(`${API_BASE}/engines/${code}?client_id=${clientId}`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-
-                    if (engineResponse.ok) {
-                        const engineData = await engineResponse.json();
-                        console.log(`${code.toUpperCase()} score data:`, engineData);
-
-                        if (engineData.results && engineData.results.length > 0) {
-                            // Assuming the latest score is the first one
-                            const score = engineData.results[0].score;
-                            const el = document.getElementById(`${code}-score`);
-                            if (el) {
-                                el.textContent = score;
-                                el.className = 'engine-score ' + getScoreClass(score);
-                            }
-                        } else {
-                            console.log(`No data for ${code.toUpperCase()}`);
-                            const el = document.getElementById(`${code}-score`);
-                            if (el) {
-                                el.textContent = '--'; // No data
-                                el.className = 'engine-score';
-                            }
-                        }
-                    } else {
-                        const errorText = await engineResponse.text();
-                        console.error(`Failed to fetch ${code} score:`, engineResponse.status, errorText);
-                        const el = document.getElementById(`${code}-score`);
-                        if (el) {
-                            el.textContent = 'ERR';
-                            el.className = 'engine-score';
-                        }
-                    }
-                } catch (err) {
-                    console.error(`Error fetching ${code} score:`, err);
-                    const el = document.getElementById(`${code}-score`);
-                    if (el) {
-                        el.textContent = 'ERR';
-                        el.className = 'engine-score';
-                    }
-                }
-            }
-
-            console.log('Dashboard loading complete');
-
-            // TODO: Fetch Total Fleet, Active Drivers, Critical Alerts from relevant APIs
-            // For now, keep them as 0 or static
         }
 
         // Show "Back to Admin" button if in admin view mode
@@ -598,6 +408,15 @@
                 window.location.href = '/admin-view-clients.html';
             });
         }
+
+        // Logout button
+        document.getElementById('logout-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('sie_token');
+            localStorage.removeItem('sie_user');
+            localStorage.removeItem('client_id');
+            window.location.href = isAdminView ? '/admin-login.html' : '/client_login.html';
+        });
 
         // Initial load
         loadDashboard();

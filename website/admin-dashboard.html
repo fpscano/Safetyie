@@ -201,9 +201,13 @@
     <script>
         const API_BASE = '/api/v1';
         const token = localStorage.getItem('sie_token');
+        const user = JSON.parse(localStorage.getItem('sie_user') || '{}');
 
-        if (!token) {
-            window.location.href = '/client_login.html';
+        // Require SIE authentication for admin dashboard
+        if (!token || user.user_type !== 'sie') {
+            localStorage.removeItem('sie_token');
+            localStorage.removeItem('sie_user');
+            window.location.href = '/admin-login.html';
         }
 
         // Toggle submenu function

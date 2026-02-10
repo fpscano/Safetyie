@@ -178,6 +178,12 @@
         .client-actions button.secondary:hover {
             background-color: #5a6268;
         }
+        .client-actions button.danger {
+            background-color: #dc3545;
+        }
+        .client-actions button.danger:hover {
+            background-color: #c82333;
+        }
         .loading {
             text-align: center;
             padding: 40px;
@@ -353,6 +359,7 @@
                         <button onclick="viewDashboard('${client.client_code}')">Dashboard</button>
                         <button onclick="manageUsers(${client.id}, '${client.client_code}')" class="secondary">Users</button>
                         <button onclick="editClient('${client.client_code}')" class="secondary">Edit</button>
+                        <button onclick="deleteClient('${client.client_code}', '${client.client_name}')" class="danger">Delete</button>
                     </div>
                 </div>
             `).join('');
@@ -384,6 +391,83 @@
         function editClient(clientCode) {
             // Navigate to edit page or open modal
             window.location.href = `admin-add-client.html?edit=${clientCode}`;
+        }
+
+        // Delete client with cascade (removes ALL associated data)
+        async function deleteClient(clientCode, clientName) {
+            // Confirmation dialog
+            const confirmMessage = `⚠️ WARNING: CASCADE DELETE ⚠️
+
+Are you ABSOLUTELY SURE you want to delete "${clientName}" (${clientCode})?
+
+This will PERMANENTLY DELETE:
+• Client record
+• ALL engine scores (SIE, HIE, EIE, FIE, TIE, DVIRIE, WIE, PIE)
+• ALL vehicles
+• ALL drivers
+• ALL client users
+• ALL audit logs
+
+THIS CANNOT BE UNDONE!
+
+Type the client code "${clientCode}" below to confirm:`;
+
+            const userInput = prompt(confirmMessage);
+
+            if (userInput !== clientCode) {
+                if (userInput !== null) {  // User didn't cancel
+                    alert('Client code did not match. Deletion cancelled.');
+                }
+                return;
+            }
+
+            // Double confirmation
+            const doubleConfirm = confirm(`FINAL CONFIRMATION:\n\nYou are about to PERMANENTLY DELETE "${clientName}" and ALL associated data.\n\nClick OK to proceed with deletion.`);
+
+            if (!doubleConfirm) {
+                alert('Deletion cancelled.');
+                return;
+            }
+
+            // Proceed with deletion
+            try {
+                loadingDiv.style.display = 'block';
+                errorMessageDiv.style.display = 'none';
+
+                const response = await fetch(`${API_BASE}/admin/clients/${clientCode}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(`✓ Successfully deleted client "${clientName}" (${clientCode})\n\nAll associated data has been permanently removed.`);
+                    // Reload clients list
+                    loadClients();
+                } else {
+                    const errorText = await response.text();
+                    let errorMsg = `Failed to delete client (${response.status})`;
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        errorMsg += `: ${errorJson.error || errorJson.message || errorText}`;
+                    } catch {
+                        errorMsg += `: ${errorText}`;
+                    }
+                    throw new Error(errorMsg);
+                }
+            } catch (err) {
+                console.error('Delete client error:', err);
+                errorMessageDiv.innerHTML = `
+                    <strong>Failed to delete client</strong><br>
+                    Error: ${err.message}<br>
+                    <small>Client may have dependencies or you may not have permission to delete.</small>
+                `;
+                errorMessageDiv.style.display = 'block';
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
         }
 
         // Initial load

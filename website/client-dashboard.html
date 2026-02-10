@@ -379,7 +379,7 @@
         async function loadClientUsers() {
             try {
                 console.log('Fetching client users for client_id:', clientId);
-                const response = await fetch(`${API_BASE}/admin/clients/${clientId}/users`, {
+                const response = await fetch(`${API_BASE}/admin/client-users?client_id=${clientId}&include_inactive=true`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 

@@ -271,22 +271,9 @@
             }
         });
 
-        // Check if already logged in as SIE admin
-        const existingToken = localStorage.getItem('sie_token');
-        const existingUser = localStorage.getItem('sie_user');
-        if (existingToken && existingUser) {
-            try {
-                const user = JSON.parse(existingUser);
-                if (user.user_type === 'sie') {
-                    // Already logged in as SIE admin, redirect to dashboard
-                    window.location.href = '/admin-dashboard.html';
-                }
-            } catch (e) {
-                // Invalid user data, clear it
-                localStorage.removeItem('sie_token');
-                localStorage.removeItem('sie_user');
-            }
-        }
+        // Allow user to login even if token exists (no auto-redirect)
+        // This ensures admin can always access the login page
+        // They can manually go to dashboard if already logged in
     </script>
 </body>
 </html>

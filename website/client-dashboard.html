@@ -440,41 +440,62 @@
         }
 
         async function loadDashboard() {
+            console.log('Loading dashboard...', { isAdminView, adminViewClientCode, clientId });
+
             // If in admin view mode, first fetch client_id from client_code
             if (isAdminView && adminViewClientCode) {
                 try {
+                    console.log('Fetching client data for admin view:', adminViewClientCode);
                     const clientResponse = await fetch(`${API_BASE}/admin/clients/${adminViewClientCode}`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
+
+                    console.log('Client fetch response status:', clientResponse.status);
+
                     if (clientResponse.ok) {
                         const clientData = await clientResponse.json();
+                        console.log('Client data received:', clientData);
+
                         clientId = clientData.id; // Set the client_id for admin view
-                        document.getElementById('clientName').textContent = clientData.client_name;
-                        document.getElementById('pageTitle').textContent = `${clientData.client_name} Dashboard`;
+                        document.getElementById('clientName').textContent = clientData.client_name || clientData.client_code;
+                        document.getElementById('pageTitle').textContent = `${clientData.client_name || clientData.client_code} Dashboard`;
                     } else {
-                        console.error('Failed to fetch client details:', clientResponse.status);
-                        alert('Failed to load client data. You may not have permission to view this client.');
+                        const errorText = await clientResponse.text();
+                        console.error('Failed to fetch client details:', clientResponse.status, errorText);
+                        alert(`Failed to load client data: ${errorText}\nStatus: ${clientResponse.status}`);
                         window.location.href = '/admin-view-clients.html';
                         return;
                     }
                 } catch (err) {
                     console.error('Error fetching client details:', err);
-                    alert('Error loading client data.');
+                    alert(`Error loading client data: ${err.message}`);
                     window.location.href = '/admin-view-clients.html';
                     return;
                 }
             } else {
                 // Regular client user view - fetch client name
+                console.log('Fetching client data for regular view, client_id:', clientId);
+
+                if (!clientId) {
+                    console.error('No client_id found in localStorage');
+                    alert('Session error: No client ID found. Please log in again.');
+                    window.location.href = '/client_login.html';
+                    return;
+                }
+
                 try {
                     const clientResponse = await fetch(`${API_BASE}/admin/clients/${clientId}`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
+
                     if (clientResponse.ok) {
                         const clientData = await clientResponse.json();
-                        document.getElementById('clientName').textContent = clientData.client_name;
-                        document.getElementById('pageTitle').textContent = `${clientData.client_name} Dashboard`;
+                        console.log('Client data received:', clientData);
+                        document.getElementById('clientName').textContent = clientData.client_name || clientData.client_code;
+                        document.getElementById('pageTitle').textContent = `${clientData.client_name || clientData.client_code} Dashboard`;
                     } else {
-                        console.error('Failed to fetch client details:', clientResponse.status);
+                        const errorText = await clientResponse.text();
+                        console.error('Failed to fetch client details:', clientResponse.status, errorText);
                     }
                 } catch (err) {
                     console.error('Error fetching client details:', err);
@@ -482,36 +503,51 @@
             }
 
             // Fetch SIE score
+            console.log('Fetching SIE score for client_id:', clientId);
+
             try {
                 const sieResponse = await fetch(`${API_BASE}/engines/sie?client_id=${clientId}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+
+                console.log('SIE score response status:', sieResponse.status);
+
                 if (sieResponse.ok) {
                     const sieData = await sieResponse.json();
+                    console.log('SIE score data:', sieData);
+
                     if (sieData.results && sieData.results.length > 0) {
                         // Assuming the latest SIE score is the first one
                         updateSIEScore(sieData.results[0].determination_score, sieData.results[0].determination_level);
                     } else {
+                        console.warn('No SIE data found for this client');
                         document.getElementById('scoreDetail').textContent = 'No SIE data available for this client.';
                         document.getElementById('scoreDetail').classList.add('show');
                     }
                 } else {
-                    console.error('Failed to fetch SIE score:', sieResponse.status);
+                    const errorText = await sieResponse.text();
+                    console.error('Failed to fetch SIE score:', sieResponse.status, errorText);
+                    document.getElementById('scoreDetail').textContent = `Error loading score data: ${errorText}`;
                 }
             } catch (err) {
-                // showError('Connection error. Please try again.'); // Removed this as there's no errorDiv in client-dashboard
                 console.error('Error fetching SIE score:', err);
+                document.getElementById('scoreDetail').textContent = `Connection error: ${err.message}`;
             }
 
             // Fetch individual engine scores
+            console.log('Fetching individual engine scores for client_id:', clientId);
+
             const engineCodes = ['hie', 'eie', 'fie', 'tie', 'dvirie', 'wie', 'pie'];
             for (const code of engineCodes) {
                 try {
                     const engineResponse = await fetch(`${API_BASE}/engines/${code}?client_id=${clientId}`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
+
                     if (engineResponse.ok) {
                         const engineData = await engineResponse.json();
+                        console.log(`${code.toUpperCase()} score data:`, engineData);
+
                         if (engineData.results && engineData.results.length > 0) {
                             // Assuming the latest score is the first one
                             const score = engineData.results[0].score;
@@ -521,6 +557,7 @@
                                 el.className = 'engine-score ' + getScoreClass(score);
                             }
                         } else {
+                            console.log(`No data for ${code.toUpperCase()}`);
                             const el = document.getElementById(`${code}-score`);
                             if (el) {
                                 el.textContent = '--'; // No data
@@ -528,13 +565,25 @@
                             }
                         }
                     } else {
-                        console.error(`Failed to fetch ${code} score:`, engineResponse.status);
+                        const errorText = await engineResponse.text();
+                        console.error(`Failed to fetch ${code} score:`, engineResponse.status, errorText);
+                        const el = document.getElementById(`${code}-score`);
+                        if (el) {
+                            el.textContent = 'ERR';
+                            el.className = 'engine-score';
+                        }
                     }
                 } catch (err) {
-                    // showError('Connection error. Please try again.'); // Removed this as there's no errorDiv in client-dashboard
                     console.error(`Error fetching ${code} score:`, err);
+                    const el = document.getElementById(`${code}-score`);
+                    if (el) {
+                        el.textContent = 'ERR';
+                        el.className = 'engine-score';
+                    }
                 }
             }
+
+            console.log('Dashboard loading complete');
 
             // TODO: Fetch Total Fleet, Active Drivers, Critical Alerts from relevant APIs
             // For now, keep them as 0 or static

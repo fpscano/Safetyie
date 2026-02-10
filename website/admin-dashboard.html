@@ -143,12 +143,69 @@
         </div>
     </div>
     <div class="main-content">
-        <h1>Welcome to the Admin Dashboard!</h1>
-        <p>This is your central hub for managing your SIE client environment.</p>
-        <p>Use the sidebar to navigate through various administrative functions.</p>
+        <h1>SIE Admin Dashboard</h1>
+        <p>Select a client to view their dashboard:</p>
+
+        <div id="loading" style="text-align: center; padding: 40px; color: #6c757d;">
+            Loading clients...
+        </div>
+
+        <div id="errorMessage" style="color: #dc2626; padding: 20px; background-color: #fee2e2; border-radius: 8px; margin-top: 20px; display: none;"></div>
+
+        <div id="clientsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;"></div>
     </div>
 
+    <style>
+        .client-card {
+            background-color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .client-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border-color: var(--accent);
+        }
+        .client-code {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+        .client-name {
+            font-size: 1.1rem;
+            color: var(--text);
+            margin-bottom: 15px;
+        }
+        .client-status {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .status-active {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .status-inactive {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+
     <script>
+        const API_BASE = '/api/v1';
+        const token = localStorage.getItem('sie_token');
+
+        if (!token) {
+            window.location.href = '/client_login.html';
+        }
+
         // Toggle submenu function
         function toggleSubmenu(id) {
             const submenu = document.getElementById(id);
@@ -161,14 +218,57 @@
             e.preventDefault();
             localStorage.removeItem('sie_token');
             localStorage.removeItem('sie_user');
-            window.location.href = '/client_login.html'; // Redirect to client login after logout
+            localStorage.removeItem('client_id');
+            window.location.href = '/client_login.html';
         });
 
-        // Basic check for authentication
-        const token = localStorage.getItem('sie_token');
-        if (!token) {
-            window.location.href = '/client_login.html'; // Redirect if no token
+        // Load and display clients
+        async function loadClients() {
+            const loadingDiv = document.getElementById('loading');
+            const errorMessageDiv = document.getElementById('errorMessage');
+            const clientsGrid = document.getElementById('clientsGrid');
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/clients`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to load clients: ${response.status}`);
+                }
+
+                const clients = await response.json();
+                loadingDiv.style.display = 'none';
+
+                if (clients.length === 0) {
+                    clientsGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #6c757d;">No clients found.</p>';
+                    return;
+                }
+
+                clientsGrid.innerHTML = clients.map(client => `
+                    <div class="client-card" onclick="viewClientDashboard('${client.client_code}')">
+                        <div class="client-code">${client.client_code}</div>
+                        <div class="client-name">${client.client_name || 'Unnamed Client'}</div>
+                        <span class="client-status ${client.is_active ? 'status-active' : 'status-inactive'}">
+                            ${client.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                    </div>
+                `).join('');
+
+            } catch (err) {
+                console.error('Error loading clients:', err);
+                loadingDiv.style.display = 'none';
+                errorMessageDiv.textContent = `Error: ${err.message}. Please check your connection and try again.`;
+                errorMessageDiv.style.display = 'block';
+            }
         }
+
+        function viewClientDashboard(clientCode) {
+            window.location.href = `/client-dashboard.html?client=${clientCode}`;
+        }
+
+        // Load clients on page load
+        loadClients();
     </script>
 </body>
 </html>

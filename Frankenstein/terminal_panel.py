@@ -101,7 +101,7 @@ class TerminalPanel(QWidget):
                     prompt="hello",
                     session_id=self._current_gemini_chat_session_id
                 )
-                self.output.append(f"") # Add an empty line for spacing before the auto-response
+                self.output.append("") # Add an empty line for spacing before the auto-response
                 self.output.append(f"<span style='color:#FF69B4;'>SarahGPT Chat Response:</span>\n{hello_response}\n")
             else:
                 self.output.append(f"\n<span style='color:red;'>{response_msg}</span>\n")
